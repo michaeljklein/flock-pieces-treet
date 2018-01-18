@@ -1,0 +1,67 @@
+name:                flock-pieces-treet
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/michaeljklein/flock-pieces-treet#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Michael Klein
+maintainer:          lambdamichael@gmail.com
+copyright:           2016 Michael Klein
+category:            Command Line
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Control.Monad.Trans.TreeT
+                     , Data.Bidistributable
+  build-depends:       base >= 4.9 && < 5
+                     , QuickCheck
+                     , bifunctors
+                     , checkers
+                     , comonad
+                     , comonad-transformers
+                     , containers
+                     , free
+                     , mtl
+                     , profunctor-extras
+                     , profunctors
+                     , random
+                     , semigroupoids
+                     , template-haskell
+                     , transformers
+  default-language:    Haskell2010
+
+
+executable flock-pieces-treet-demo
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , flock-pieces-treet
+                     , containers
+  default-language:    Haskell2010
+
+test-suite flock-pieces-treet-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Test.hs
+  build-depends:       base
+                     , flock-pieces-treet
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+benchmark flock-pieces-treet-bench
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      bench
+  main-is:             Bench.hs
+  build-depends:       base
+                     , flock-pieces-treet
+  ghc-options:         -Wall -O2
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/michaeljklein/flock-pieces-treet
