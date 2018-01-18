@@ -16,6 +16,7 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Control.Monad.Trans.TreeT
+                     , Control.Arrow.Tree
                      , Data.Bidistributable
   build-depends:       base >= 4.9 && < 5
                      , QuickCheck
@@ -26,6 +27,7 @@ library
                      , containers
                      , free
                      , mtl
+                     , primitive
                      , profunctor-extras
                      , profunctors
                      , random
