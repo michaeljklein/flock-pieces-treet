@@ -1,15 +1,3 @@
--- {-# LANGUAGE AllowAmbiguousTypes #-}
--- {-# LANGUAGE DeriveFunctor #-}
--- {-# LANGUAGE FlexibleContexts #-}
--- {-# LANGUAGE FlexibleInstances #-}
--- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
--- {-# LANGUAGE KindSignatures #-}
--- {-# LANGUAGE MultiParamTypeClasses #-}
--- {-# LANGUAGE RankNTypes #-}
--- {-# LANGUAGE ScopedTypeVariables #-}
--- {-# LANGUAGE TupleSections #-}
--- {-# LANGUAGE TypeFamilies #-}
--- {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE InstanceSigs #-}

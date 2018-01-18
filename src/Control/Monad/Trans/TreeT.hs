@@ -34,31 +34,7 @@ import GHC.Generics (Generic)
 import Prelude hiding (fail, id, (.))
 
 
--- I'm calling this out of scope:
---
--- import Pointfree
--- pfRec :: String -> [String] -> String -> [String]
--- pfRec fname args expr = minsBy cmpLength . (>>= pointfree) . fmap (\_ -> unwords $ fname : args ++ ["=", expr]) . permutations $ args
-
--- | Compare length of lists, without `Int` or `Eq`
-cmpLength :: [a] -> [b] -> Ordering
-cmpLength (_:xs) (_:ys) = cmpLength xs ys
-cmpLength (  []) (_:_ ) = LT
-cmpLength (_:_ ) (  []) = GT
-cmpLength (  _ ) (  _ ) = EQ
-
--- | Minimums by:
-minsBy :: (a -> a -> Ordering) -> [a] -> [a]
-minsBy _ []     = []
-minsBy f (x:xs) = looop x [x] xs
-  where
-    looop n ys (z:zs) = case f n z of
-                         LT -> looop n    ys  zs
-                         EQ -> looop n (z:ys) zs
-                         GT -> looop z [z]    zs
-    looop _ ys  _     = ys
-
-
+-- | Algebraic notes:
 --
 -- @
 -- -- f' = (f / g) * g'
@@ -139,10 +115,12 @@ minsBy f (x:xs) = looop x [x] xs
 --  y :: `h -> `f -> `(y h f)
 -- @
 --
+algebraicNotes :: ()
+algebraicNotes = ()
 
 
-
-
+-- | Algebraic examples:
+--
 -- @
 --  La * Lb -> La
 --
@@ -160,122 +138,207 @@ minsBy f (x:xs) = looop x [x] xs
 --  (A, B)
 -- @
 --
+algebraicExamples :: ()
+algebraicExamples = ()
 
--- Consider an arbitrary directed cycle of primitive languages
+
+-- Consider an arbitrary directed cycle of primitive languages.
 --
--- For each La such that La -> Lb, there exists a language La' such that
---  All the properties of La hold in La'
---    because La's properties leave the remaining unaffected?
+-- For each @La@ such that @La -> Lb@, there exists a language @La'@ such that all the properties of @La@ hold in @La'@
+--
+-- (Because @La@'s properties leave the remaining unaffected?)
+--
+-- @
 --  La' is defined as (La - Lb) * Lb'
 --    Where (Lx - Ly) is the language formed by removing all properties of Ly from Lx
 --    Where (Lx * Ly) is the cartesian product of Lx and Ly, formed of the pairs: (inhabitant of Ly, inhabitant of Lx)
---  All the properties of La + Lb hold in La'
---    because properties of La - Lb hold on the left and properties that intersect the two hold over the product
+-- @
+--
+--  All the properties of @La + Lb hold in La'@
+--    because properties of La - Lb hold on the left and properties that intersect the two hold over the product.
+--
+--
 --  What about expressability in a third language?
---    Great question
+--    Great question.
+--
 --  What if the properties of the two languages somehow contradict or cancel each other out?
---    Well, at the moment, there's no logic attached so there's no logic to contradict
---    Cancel each other out (possibly a.k.a. the union or intersection is uninhabited): No claims are made as to the inhabitants of the languages, so this doesn't seem to be a problem
+--    Well, at the moment, there's no logic attached so there's no logic to contradict.
+--
+--    Cancel each other out (possibly a.k.a. the union or intersection is uninhabited): No claims are made as to the inhabitants of the languages, so this doesn't seem to be a problem.
+--
 --  What can we say about non-empty, consistent sublanguages of a consistent language?
---    It'd be awesome, but I'm not sure it's possible, if we could guarantee distribution of properties
---      I know it's possible in some cases, such as with (Functor f, Monad m) => Tree m (f a) -> f (Tree m a), but what about in general?
+--    It'd be awesome, but I'm not sure it's possible, if we could guarantee distribution of properties.
 --
---      It looks like this might work because
+--  I know it's possible in some cases, such as with
+--
+-- @
+--  (Functor f, Monad m) => Tree m (f a) -> f (Tree m a)
+-- @
+--
+-- But what about in general?
+considerLanguageCycle :: ()
+considerLanguageCycle = ()
+
+
+-- | Thus we see that for languages based on @(->)@, aka application, every property seems to hold on either `Tree` or `Forest`:
+--
+-- - Because Tree is the combination of the Value language and the Action language
+-- - Because ATree is the combination of the Semigroupoid language with the Category language (ATree doesn't have identity, AForest does, even though it contains ATree.)
+--   * OR because @ATree@ is the product of @(Category - Identity)@ and @Category@..?
+--   * So all associtive-requiring properties hold for both and all @associative+identity@-requiring properties only hold for @AForest@
 --
 --
+-- If this construction works, then I believe it may be "self-holding", i.e. free:
+-- The primitives used to express it are exactly the primitives needed to express it.
 --
--- Thus we see that for languages based on (->), aka application, every property seems to hold on either Tree or Forest,
---  Because Tree is the combination of the Value language and the Action language
---  Because ATree is the combination of the Semigroupoid language with the Category language (ATree doesn't have identity, AForest does, even though it contains ATree.)
---    OR because ATree is the product of (Category - Identity) and Category
---    So all associtive-requiring properties hold for both and all associative+identity-requiring properties only hold for AForest
+-- If this works and forms an internally consistent language,
+-- then this effectively adds a primitive form of implementation-agnostic, decidable, recursion to Flock.
 --
+-- It also allows the simple addition of Categories, Application, Type hierarchies, etc. etc. etc.
 --
--- If this construction works, then I believe it may be self-holding: The primitives used to express it are exactly the primitives needed to express it
---
--- If this works and forms an internally consistent language, then this effectively adds a primitive form of implementation-agnostic, decidable, recursion to Flock.
---  It also allows the simple addition of Categories, Application, Type hierarchies, etc. etc. etc.
---  Note: While I'm unsure whether any n-lang in the Flock core is sufficient to express itself, it's trivial to show that there's an (n+m)-lang that does (because of regularity)
+-- Note: While I'm unsure whether any n-lang in the Flock core is sufficient to express itself, it's trivial to show that there's an (n+m)-lang that does (because of regularity).
 --
 -- Does this preserve: consistency, completeness, decidability, finiteness, haltingness, etc?
+--
 -- Well, if it's shown on a nice category-theoretic level, it doesn't really matter, no?
--- Everything will be preserved, [evil-laugh] XD
+--
+-- @
+--  Everything will be preserved, [evil-laugh] XD
+-- @
+--
+-- (That still cracks me up)
+--
+-- Natural extension of @A@. There is a function
+--
+-- @
+--  f : A -> A',
+--  f' :: A' -> A,
+--  f' . f = id,
+--  A' ~ A <=> f . f' = id
+-- @
+--
+--  I wonder if this indeed forms a structure analogous to a factorization system for arbitrary categories?
+propertyPreservation :: ()
+propertyPreservation = ()
 
 
--- Natural extension of A. There is a function f : A -> A', f' :: A' -> A, f' . f = id, A' ~ A <=> f . f' = id
---  huh, I wonder if this indeed forms a structure analogous to a factorization system for arbitrary categories?
+-- | More possibilities
+--
+-- @
+-- f :: a -> a',
+-- f' :: a' -> a,
+-- f' . f = id,
+-- Iso (a' ~ a) (f . f' = id)
+-- @
+
+-- @
+-- f :: g a -> g' a',
+-- f' :: g' a' -> g a,
+-- f' . f = id
+-- @
+--
+twoMoreAttempts :: ()
+twoMoreAttempts = ()
+
+-- | Summarize and notes:
+--
+-- @
+-- F, G functors from C to D
+-- n, natural transformation F -> G
+--   nx :: forall (x :: C). F x -> G x
+--   forall (f :: (x :: C) -> (y :: C)).
+--     exists (ny :: F y -> G y).
+--     ny . F (f :: x -> y) == G (f :: x -> y) . nx
+-- @
+--
+-- @
+-- Functor (f :: * -> *)
+-- Functor (g :: * -> *)
+-- @
+--
+-- @
+-- f' = (f / g) * g'
+-- f' = (f / g) * ((g / f) * f')
+-- f' = (*) ((/) f g) ((*) ((/) g f) f')
+-- f' = (f `y` g) `x` ((g `y` f) `x` f')
+-- f' = x (y f g) (x (y g f) f')
+--
+-- g' = (g / f) * f'
+-- g' = (g / f) * ((f / g) * g')
+-- g' = (g `y` f) `x` ((f `y` g) `x` g')
+-- @
+--
+naturalTransformationAlgebra :: ()
+naturalTransformationAlgebra = ()
+
+-- | Free/Cofree and algebra
+--
+-- @
+-- newtype Free f a = Free { unfree :: Either a (f (Free f a))) }
+--   Either a (f (Free f a))
+--   (Either a :.: f :.: Free f)
+-- Sum version of Tree f a
+-- @
+--
+-- @
+-- Cofree f a =  a :<  (f (Cofree f a))
+--   Tree f a =  a (,) (f (Tree   f a))
+-- @
+--
+-- @
+-- Free f a = Pure a | Free (f (Free f a))
+-- Free f a = Either a (f (Free f a))
+-- Free f a = Either a (f (Either a (f (Free f a))))
+-- Free f a = Either a (f -> (a, (Either a (f -> (a, )(Free f a)))))
+-- Free (TT f a b) c = Either a (TT a b (Free (TT f a b) c))
+-- Free (TT f a b) c = Either a (TT a b (Either a (TT a b (Free (TT f a b) c))))
+-- @
+--
+-- @
+-- Forest (Either a . f) a = Either a (f (a, Forest f a))
+-- Forest f a = f (a, Forest f a)
+-- Forest f a = f (Tree f a)
+-- @
+--
+-- @
+-- TT f a b = f a -> (a, b)
+-- @
+--
+ttDefinition :: ()
+ttDefinition = ()
 
 
-{-
-f :: a -> a', f' :: a' -> a, f' . f = id, Iso (a' ~ a) (f . f' = id)
-
-f :: g a -> g' a', f' :: g' a' -> g a, f' . f = id
-
-F, G functors from C to D
-n, natural transformation F -> G
-  nx :: forall (x :: C). F x -> G x
-  forall (f :: (x :: C) -> (y :: C)).
-    exists (ny :: F y -> G y).
-    ny . F (f :: x -> y) == G (f :: x -> y) . nx
-
-Functor (f :: * -> *)
-Functor (g :: * -> *)
-
-
-f' = (f / g) * g'
-f' = (f / g) * ((g / f) * f')
-f' = (*) ((/) f g) ((*) ((/) g f) f')
-f' = (f `y` g) `x` ((g `y` f) `x` f')
-f' = x (y f g) (x (y g f) f')
-
-g' = (g / f) * f'
-g' = (g / f) * ((f / g) * g')
-g' = (g `y` f) `x` ((f `y` g) `x` g')
-
-
-newtype Free f a = Free { unfree :: Either a (f (Free f a))) }
-  Either a (f (Free f a))
-  (Either a :.: f :.: Free f)
-Sum version of Tree f a
-
-Cofree f a =  a :<  (f (Cofree f a))
-  Tree f a =  a (,) (f (Tree   f a))
-
-Free f a = Pure a | Free (f (Free f a))
-Free f a = Either a (f (Free f a))
-Free f a = Either a (f (Either a (f (Free f a))))
-Free f a = Either a (f -> (a, (Either a (f -> (a, )(Free f a)))))
-Free (TT f a b) c = Either a (TT a b (Free (TT f a b) c))
-Free (TT f a b) c = Either a (TT a b (Either a (TT a b (Free (TT f a b) c))))
-
-
-Forest (Either a . f) a = Either a (f (a, Forest f a))
-Forest f a = f (a, Forest f a)
-Forest f a = f (Tree f a)
-
-TT f a b = f a -> (a, b)
-
-Functor f => Monad (Free f a) => MonadFree f (Free f) =>
-  wrap :: f (Free f a) -> Free f a
-  wrap x = Pure  (x :: f (Free f a))
-  wrap x = Right (x :: f (Free f a))
-
-Monad f => Monad (Forest f a) =>
-  wrap :: f (Forest f a) -> Forest f a
-  wrap = (coerce :: (f (f (a, Forest f a)) -> f (a, Forest f a)) -> f (Forest f a) -> Forest f a) (join :: Monad f => f (f (a, Forest f a)) -> f (a, Forest f a))
-
-newtype FreeT   f m a = FreeT   { runFreeT   :: m (FreeF f a (FreeT f m a)) }
-  newtype FreeT   f m a = m (Either a (f (FreeT f m a)))
-  newtype FreeT   f m a = m (Either a (f (m (Either a (f (FreeT f m a))))))
-data FreeF   f a b = Pure a | Free (f b)
-  data FreeF   f a b = Either a (f b)
-
-newtype CofreeT f w a = CofreeT { runCofreeT :: w (CofreeF f a (CofreeT f w a)) }
-  newtype CofreeT f w a = w (a, f (CofreeT f w a))
-  newtype CofreeT f w a = w (a, f (w (a, f (CofreeT f w a))))
-data CofreeF f a b = a :< (f b)
-  data CofreeF f a b = (a, f b)
--}
+-- | Free and Cofree instances:
+--
+-- @
+-- newtype FreeT   f m a = FreeT   { runFreeT   :: m (FreeF f a (FreeT f m a)) }
+--   newtype FreeT   f m a = m (Either a (f (FreeT f m a)))
+--   newtype FreeT   f m a = m (Either a (f (m (Either a (f (FreeT f m a))))))
+-- data FreeF   f a b = Pure a | Free (f b)
+--   data FreeF   f a b = Either a (f b)
+-- @
+--
+-- @
+-- newtype CofreeT f w a = CofreeT { runCofreeT :: w (CofreeF f a (CofreeT f w a)) }
+--   newtype CofreeT f w a = w (a, f (CofreeT f w a))
+--   newtype CofreeT f w a = w (a, f (w (a, f (CofreeT f w a))))
+-- data CofreeF f a b = a :< (f b)
+--   data CofreeF f a b = (a, f b)
+-- @
+--
+-- @
+-- Functor f => Monad (Free f a) => MonadFree f (Free f) =>
+--   wrap :: f (Free f a) -> Free f a
+--   wrap x = Pure  (x :: f (Free f a))
+--   wrap x = Right (x :: f (Free f a))
+--
+-- Monad f => Monad (Forest f a) =>
+--   wrap :: f (Forest f a) -> Forest f a
+--   wrap = (coerce :: (f (f (a, Forest f a)) -> f (a, Forest f a)) -> f (Forest f a) -> Forest f a) (join :: Monad f => f (f (a, Forest f a)) -> f (a, Forest f a))
+-- @
+--
+freeAndCofree :: ()
+freeAndCofree = ()
 
 
 -- | A Generalized tree type
@@ -435,37 +498,6 @@ liftTree x = Tree <$> fmap (, lift x) x
 instance Monad m => MonadFree m (Forest m) where
   wrap :: m (Forest m a) -> Forest m a
   wrap fs = Forest (fs >>= getForest)
-
--- | Pull out a layer of monadic context from a `Forest`.
---
--- Not sure, but I think that the only inhabitants of this type can:
---
---  * return the original
---  * do this
---  * swap two `Tree` values
---  * some combination of the above
-pullM :: Functor m => Forest m a -> m (Forest m a)
-pullM (Forest xs) = snd . getTree <$> xs
-
--- | `pullM` and `extract`
-pullMa :: Functor m => Forest m a -> m a
-pullMa (Forest xs) = extract <$> xs
-
--- | Unfold a `Tree` from a seed value
-unfoldTree   :: Functor m => (b -> (a, m b)) -> b -> Tree   m a
-unfoldTree   f x = Tree   (Forest . fmap (unfoldTree   f) <$> f x)
-
--- | Unfold a `Forest` from a seed value
-unfoldForest :: Functor m => (b -> m (a, b)) -> b -> Forest m a
-unfoldForest f x = Forest (Tree .   fmap (unfoldForest f) <$> f x)
-
---  | Build a `Tree` using `Applicative` iteration
-iterateTree :: Applicative m => (a -> m a) -> a -> m (Tree m a)
-iterateTree f x = let y = f x in Tree <$> liftA2 (,) y (iterateForest f <$> y)
-
---  | Build a `Forest` using `Applicative` iteration
-iterateForest :: Applicative m => (a -> m a) -> a -> Forest m a
-iterateForest f x = Forest (iterateTree f x)
 
 
 instance (Monoid a, Applicative m) => Monoid (Tree m a) where
@@ -635,6 +667,59 @@ instance (Applicative m, Floating a) => Floating (Forest m a) where
   asinh (Forest xs) = Forest (asinh <$> xs)
   acosh (Forest xs) = Forest (acosh <$> xs)
   atanh (Forest xs) = Forest (atanh <$> xs)
+
+
+
+-- | Pull out a layer of monadic context from a `Forest`.
+--
+-- Not sure, but I think that the only inhabitants of this type can:
+--
+--  * return the original
+--  * do this
+--  * swap two `Tree` values
+--  * some combination of the above
+pullM :: Functor m => Forest m a -> m (Forest m a)
+pullM (Forest xs) = snd . getTree <$> xs
+
+-- | `pullM` and `extract`
+pullMa :: Functor m => Forest m a -> m a
+pullMa (Forest xs) = extract <$> xs
+
+-- | Unfold a `Tree` from a seed value
+unfoldTree   :: Functor m => (b -> (a, m b)) -> b -> Tree   m a
+unfoldTree   f x = Tree   (Forest . fmap (unfoldTree   f) <$> f x)
+
+-- | Unfold a `Forest` from a seed value
+unfoldForest :: Functor m => (b -> m (a, b)) -> b -> Forest m a
+unfoldForest f x = Forest (Tree .   fmap (unfoldForest f) <$> f x)
+
+--  | Build a `Tree` using `Applicative` iteration
+iterateTree :: Applicative m => (a -> m a) -> a -> m (Tree m a)
+iterateTree f x = let y = f x in Tree <$> liftA2 (,) y (iterateForest f <$> y)
+
+--  | Build a `Forest` using `Applicative` iteration
+iterateForest :: Applicative m => (a -> m a) -> a -> Forest m a
+iterateForest f x = Forest (iterateTree f x)
+
+
+-- | Compare length of lists, without `Int` or `Eq`
+cmpLength :: [a] -> [b] -> Ordering
+cmpLength (_:xs) (_:ys) = cmpLength xs ys
+cmpLength (  []) (_:_ ) = LT
+cmpLength (_:_ ) (  []) = GT
+cmpLength (  _ ) (  _ ) = EQ
+
+-- | Minimums by:
+minsBy :: (a -> a -> Ordering) -> [a] -> [a]
+minsBy _ []     = []
+minsBy f (x:xs) = looop x [x] xs
+  where
+    looop n ys (z:zs) = case f n z of
+                         LT -> looop n    ys  zs
+                         EQ -> looop n (z:ys) zs
+                         GT -> looop z [z]    zs
+    looop _ ys  _     = ys
+
 
 
 
