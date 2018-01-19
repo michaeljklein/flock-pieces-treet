@@ -2,9 +2,6 @@
 
 `TreeT` is a recursive and monad transformer with interesting properties, not unlike free monads (`free: Control.Monad.Free`).
 
-Note that `flock-pieces-free` overlaps with this module,
-though I believe it's less developed on the Haskell side and has more notes.
-
 
 ## Module Dependency Graph
 
