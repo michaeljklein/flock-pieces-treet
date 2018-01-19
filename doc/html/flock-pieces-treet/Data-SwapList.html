@@ -1,0 +1,217 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Data.SwapList</title><link href="ocean.css" rel="stylesheet" type="text/css" title="Ocean" /><script src="haddock-util.js" type="text/javascript"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script><script type="text/javascript">//<![CDATA[
+window.onload = function () {pageLoad();};
+//]]>
+</script></head><body><div id="package-header"><ul class="links" id="page-menu"><li><a href="src/Data.SwapList.html">Source</a></li><li><a href="index.html">Contents</a></li><li><a href="doc-index.html">Index</a></li></ul><p class="caption">flock-pieces-treet-0.1.0.0</p></div><div id="content"><div id="module-header"><table class="info"><tr><th>Safe Haskell</th><td>Safe</td></tr><tr><th>Language</th><td>Haskell2010</td></tr></table><p class="caption">Data.SwapList</p></div><div id="synopsis"><p id="control.syn" class="caption expander" onclick="toggleSection('syn')">Synopsis</p><ul id="section.syn" class="hide" onclick="toggleSection('syn')"><li class="src short"><span class="keyword">class</span> <a href="../base-4.10.1.0/Data-Functor.html#t:Functor">Functor</a> f =&gt; <a href="#t:Biexpandcontract">Biexpandcontract</a> (q :: <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a> -&gt; <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a> -&gt; <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a>) (p :: <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a> -&gt; <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a> -&gt; <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a>) (f :: <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a> -&gt; <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a>) <span class="keyword">where</span><ul class="subs"></ul></li><li class="src short"><span class="keyword">data</span> <a href="#t:SwapList">SwapList</a> a b<ul class="subs"><li>= <a href="#v:SwapLeft">SwapLeft</a> a [a] (<a href="Data-SwapList.html#t:SwapList">SwapList</a> a b)</li><li>| <a href="#v:SwapRight">SwapRight</a> b [b] (<a href="Data-SwapList.html#t:SwapList">SwapList</a> a b)</li><li>| <a href="#v:SwapEmpty">SwapEmpty</a></li></ul></li><li class="src short"><a href="#v:seqComonad">seqComonad</a> :: <a href="../comonad-5.0.2/Control-Comonad.html#t:Comonad">Comonad</a> f =&gt; f [a] -&gt; [f a]</li><li class="src short"><a href="#v:maybeComonad">maybeComonad</a> :: <a href="../comonad-5.0.2/Control-Comonad.html#t:Comonad">Comonad</a> f =&gt; f (<a href="../base-4.10.1.0/Data-Maybe.html#t:Maybe">Maybe</a> a) -&gt; <a href="../base-4.10.1.0/Data-Maybe.html#t:Maybe">Maybe</a> (f a)</li><li class="src short"><a href="#v:leftExpand">leftExpand</a> :: (a, [a]) -&gt; [<a href="../base-4.10.1.0/Data-Either.html#t:Either">Either</a> a b] -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b</li><li class="src short"><a href="#v:rightExpand">rightExpand</a> :: (b, [b]) -&gt; [<a href="../base-4.10.1.0/Data-Either.html#t:Either">Either</a> a b] -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b</li><li class="src short"><a href="#v:introductionNotes">introductionNotes</a> :: ()</li><li class="src short"><a href="#v:factorizationOfLanguages">factorizationOfLanguages</a> :: ()</li><li class="src short"><a href="#v:quickRecap">quickRecap</a> :: ()</li><li class="src short"><a href="#v:threePartsOfSpecification">threePartsOfSpecification</a> :: ()</li><li class="src short"><a href="#v:structurePreservingBijection">structurePreservingBijection</a> :: ()</li><li class="src short"><a href="#v:someValidPartitions">someValidPartitions</a> :: ()</li><li class="src short"><a href="#v:someValidPartitionsNotes">someValidPartitionsNotes</a> :: ()</li><li class="src short"><a href="#v:comonadComparison">comonadComparison</a> :: ()</li><li class="src short"><a href="#v:seriesJoinPoints">seriesJoinPoints</a> :: ()</li><li class="src short"><a href="#v:strongerVersionSequence">strongerVersionSequence</a> :: ()</li><li class="src short"><a href="#v:dataFGLanglaws">dataFGLanglaws</a> :: ()</li></ul></div><div id="interface"><h1>Documentation</h1><div class="top"><p class="src"><span class="keyword">class</span> <a href="../base-4.10.1.0/Data-Functor.html#t:Functor">Functor</a> f =&gt; <a id="t:Biexpandcontract" class="def">Biexpandcontract</a> (q :: <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a> -&gt; <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a> -&gt; <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a>) (p :: <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a> -&gt; <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a> -&gt; <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a>) (f :: <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a> -&gt; <a href="../base-4.10.1.0/Data-Kind.html#t:-42-">*</a>) <span class="keyword">where</span> <a href="src/Data.SwapList.html#Biexpandcontract" class="link">Source</a> <a href="#t:Biexpandcontract" class="selflink">#</a></p><div class="doc"><p><code><a href="Data-SwapList.html#v:expand">expand</a></code> and <code><a href="Data-SwapList.html#v:contract">contract</a></code></p><pre>dist :: f (p a b) -&gt; RopeT m p (f a) (f b)
+
+dist :: f (Either a b) -&gt; RopeT Maybe (,) (f a) (f b)
+</pre></div><div class="subs minimal"><p class="caption">Minimal complete definition</p><p class="src"><a href="Data-SwapList.html#v:expand">expand</a>, <a href="Data-SwapList.html#v:contract">contract</a></p></div><div class="subs methods"><p class="caption">Methods</p><p class="src"><a id="v:expand" class="def">expand</a> :: f (p a b) -&gt; q a b <a href="src/Data.SwapList.html#expand" class="link">Source</a> <a href="#v:expand" class="selflink">#</a></p><p class="src"><a id="v:contract" class="def">contract</a> :: q (f a) (f b) -&gt; f (p a b) <a href="src/Data.SwapList.html#contract" class="link">Source</a> <a href="#v:contract" class="selflink">#</a></p></div><div class="subs instances"><p id="control.i:Biexpandcontract" class="caption collapser" onclick="toggleSection('i:Biexpandcontract')">Instances</p><div id="section.i:Biexpandcontract" class="show"><table><tr><td class="src clearfix"><span class="inst-left"><span id="control.i:ic:Biexpandcontract:Biexpandcontract:1" class="instance expander" onclick="toggleSection('i:ic:Biexpandcontract:Biexpandcontract:1')"></span> <a href="Data-SwapList.html#t:Biexpandcontract">Biexpandcontract</a> <a href="Data-SwapList.html#t:SwapList">SwapList</a> <a href="../base-4.10.1.0/Data-Either.html#t:Either">Either</a> []</span> <a href="src/Data.SwapList.html#line-102" class="link">Source</a> <a href="#t:Biexpandcontract" class="selflink">#</a></td><td class="doc"><p>uses <code><a href="Data-SwapList.html#v:leftExpand">leftExpand</a></code> and <code><a href="Data-SwapList.html#v:rightExpand">rightExpand</a></code></p><p>Notes:</p><pre>contract :: q [a] [b] -&gt; [Either a b]
+
+[[a], [b], [a], [b], [a], [b]]
+</pre></td></tr><tr><td colspan="2"><div id="section.i:ic:Biexpandcontract:Biexpandcontract:1" class="inst-details hide"><div class="subs methods"><p class="caption">Methods</p><p class="src"><a href="#v:expand">expand</a> :: [<a href="../base-4.10.1.0/Data-Either.html#t:Either">Either</a> a b] -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b <a href="src/Data.SwapList.html#expand" class="link">Source</a> <a href="#v:expand" class="selflink">#</a></p><p class="src"><a href="#v:contract">contract</a> :: <a href="Data-SwapList.html#t:SwapList">SwapList</a> [a] [b] -&gt; [<a href="../base-4.10.1.0/Data-Either.html#t:Either">Either</a> a b] <a href="src/Data.SwapList.html#contract" class="link">Source</a> <a href="#v:contract" class="selflink">#</a></p></div></div></td></tr></table></div></div></div><div class="top"><p class="src"><span class="keyword">data</span> <a id="t:SwapList" class="def">SwapList</a> a b <a href="src/Data.SwapList.html#SwapList" class="link">Source</a> <a href="#t:SwapList" class="selflink">#</a></p><div class="doc"><p>An example data type for <code><a href="Data-SwapList.html#t:Biexpandcontract">Biexpandcontract</a></code></p><pre> X a b = X (a, Maybe (Y a b))
+ Y a b = Y (b, Maybe (X a b))
+
+ Z a b = Either (X a b) (Y a b)
+
+ W a b = W (a, Maybe (W b a))
+ Z a b = Either (W a b) (W b a)
+ Z a b = let w x y = (x, Maybe (w y x)) in Either (w a b) (w b a)
+</pre><pre> [(a, b)]     -&gt; ([a], [b])
+ [Either a b] -&gt; Either (w a b) (flip w a b)
+ f (p a b)    -&gt; p (g a b) (h a b)
+</pre><pre> Maybe (Either (NonEmpty a) (NonEmpty b), SwapList a b)
+</pre></div><div class="subs constructors"><p class="caption">Constructors</p><table><tr><td class="src"><a id="v:SwapLeft" class="def">SwapLeft</a> a [a] (<a href="Data-SwapList.html#t:SwapList">SwapList</a> a b)</td><td class="doc empty">&nbsp;</td></tr><tr><td class="src"><a id="v:SwapRight" class="def">SwapRight</a> b [b] (<a href="Data-SwapList.html#t:SwapList">SwapList</a> a b)</td><td class="doc empty">&nbsp;</td></tr><tr><td class="src"><a id="v:SwapEmpty" class="def">SwapEmpty</a></td><td class="doc empty">&nbsp;</td></tr></table></div><div class="subs instances"><p id="control.i:SwapList" class="caption collapser" onclick="toggleSection('i:SwapList')">Instances</p><div id="section.i:SwapList" class="show"><table><tr><td class="src clearfix"><span class="inst-left"><span id="control.i:id:SwapList:Bifunctor:1" class="instance expander" onclick="toggleSection('i:id:SwapList:Bifunctor:1')"></span> <a href="../base-4.10.1.0/Data-Bifunctor.html#t:Bifunctor">Bifunctor</a> <a href="Data-SwapList.html#t:SwapList">SwapList</a></span> <a href="src/Data.SwapList.html#line-61" class="link">Source</a> <a href="#t:SwapList" class="selflink">#</a></td><td class="doc empty">&nbsp;</td></tr><tr><td colspan="2"><div id="section.i:id:SwapList:Bifunctor:1" class="inst-details hide"><div class="subs methods"><p class="caption">Methods</p><p class="src"><a href="#v:bimap">bimap</a> :: (a -&gt; b) -&gt; (c -&gt; d) -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a c -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> b d <a href="#v:bimap" class="selflink">#</a></p><p class="src"><a href="#v:first">first</a> :: (a -&gt; b) -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a c -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> b c <a href="#v:first" class="selflink">#</a></p><p class="src"><a href="#v:second">second</a> :: (b -&gt; c) -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a c <a href="#v:second" class="selflink">#</a></p></div></div></td></tr><tr><td class="src clearfix"><span class="inst-left"><span id="control.i:id:SwapList:Swap:2" class="instance expander" onclick="toggleSection('i:id:SwapList:Swap:2')"></span> <a href="Data-Bidistributable.html#t:Swap">Swap</a> <a href="Data-SwapList.html#t:SwapList">SwapList</a></span> <a href="src/Data.SwapList.html#line-66" class="link">Source</a> <a href="#t:SwapList" class="selflink">#</a></td><td class="doc empty">&nbsp;</td></tr><tr><td colspan="2"><div id="section.i:id:SwapList:Swap:2" class="inst-details hide"><div class="subs methods"><p class="caption">Methods</p><p class="src"><a href="#v:swap">swap</a> :: <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> b a <a href="src/Data.Bidistributable.html#swap" class="link">Source</a> <a href="#v:swap" class="selflink">#</a></p></div></div></td></tr><tr><td class="src clearfix"><span class="inst-left"><span id="control.i:id:SwapList:Twist:3" class="instance expander" onclick="toggleSection('i:id:SwapList:Twist:3')"></span> <a href="../comonad-5.0.2/Control-Comonad.html#t:Comonad">Comonad</a> f =&gt; <a href="Data-Rope.html#t:Twist">Twist</a> f <a href="Data-SwapList.html#t:SwapList">SwapList</a></span> <a href="src/Data.SwapList.html#line-74" class="link">Source</a> <a href="#t:SwapList" class="selflink">#</a></td><td class="doc"><p>Uses <code><a href="Data-SwapList.html#v:seqComonad">seqComonad</a></code></p></td></tr><tr><td colspan="2"><div id="section.i:id:SwapList:Twist:3" class="inst-details hide"><div class="subs methods"><p class="caption">Methods</p><p class="src"><a href="#v:twist">twist</a> :: f (<a href="Data-SwapList.html#t:SwapList">SwapList</a> a b) -&gt; <a href="Data-Rope.html#t:Rope">Rope</a> <a href="Data-SwapList.html#t:SwapList">SwapList</a> (f a) (f b) <a href="src/Data.Rope.html#twist" class="link">Source</a> <a href="#v:twist" class="selflink">#</a></p></div></div></td></tr><tr><td class="src clearfix"><span class="inst-left"><span id="control.i:id:SwapList:Biexpandcontract:4" class="instance expander" onclick="toggleSection('i:id:SwapList:Biexpandcontract:4')"></span> <a href="Data-SwapList.html#t:Biexpandcontract">Biexpandcontract</a> <a href="Data-SwapList.html#t:SwapList">SwapList</a> <a href="../base-4.10.1.0/Data-Either.html#t:Either">Either</a> []</span> <a href="src/Data.SwapList.html#line-102" class="link">Source</a> <a href="#t:SwapList" class="selflink">#</a></td><td class="doc"><p>uses <code><a href="Data-SwapList.html#v:leftExpand">leftExpand</a></code> and <code><a href="Data-SwapList.html#v:rightExpand">rightExpand</a></code></p><p>Notes:</p><pre>contract :: q [a] [b] -&gt; [Either a b]
+
+[[a], [b], [a], [b], [a], [b]]
+</pre></td></tr><tr><td colspan="2"><div id="section.i:id:SwapList:Biexpandcontract:4" class="inst-details hide"><div class="subs methods"><p class="caption">Methods</p><p class="src"><a href="#v:expand">expand</a> :: [<a href="../base-4.10.1.0/Data-Either.html#t:Either">Either</a> a b] -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b <a href="src/Data.SwapList.html#expand" class="link">Source</a> <a href="#v:expand" class="selflink">#</a></p><p class="src"><a href="#v:contract">contract</a> :: <a href="Data-SwapList.html#t:SwapList">SwapList</a> [a] [b] -&gt; [<a href="../base-4.10.1.0/Data-Either.html#t:Either">Either</a> a b] <a href="src/Data.SwapList.html#contract" class="link">Source</a> <a href="#v:contract" class="selflink">#</a></p></div></div></td></tr><tr><td class="src clearfix"><span class="inst-left"><span id="control.i:id:SwapList:Eq:5" class="instance expander" onclick="toggleSection('i:id:SwapList:Eq:5')"></span> (<a href="../base-4.10.1.0/Data-Eq.html#t:Eq">Eq</a> b, <a href="../base-4.10.1.0/Data-Eq.html#t:Eq">Eq</a> a) =&gt; <a href="../base-4.10.1.0/Data-Eq.html#t:Eq">Eq</a> (<a href="Data-SwapList.html#t:SwapList">SwapList</a> a b)</span> <a href="src/Data.SwapList.html#line-59" class="link">Source</a> <a href="#t:SwapList" class="selflink">#</a></td><td class="doc empty">&nbsp;</td></tr><tr><td colspan="2"><div id="section.i:id:SwapList:Eq:5" class="inst-details hide"><div class="subs methods"><p class="caption">Methods</p><p class="src"><a href="#v:-61--61-">(==)</a> :: <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="../base-4.10.1.0/Data-Bool.html#t:Bool">Bool</a> <a href="#v:-61--61-" class="selflink">#</a></p><p class="src"><a href="#v:-47--61-">(/=)</a> :: <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="../base-4.10.1.0/Data-Bool.html#t:Bool">Bool</a> <a href="#v:-47--61-" class="selflink">#</a></p></div></div></td></tr><tr><td class="src clearfix"><span class="inst-left"><span id="control.i:id:SwapList:Ord:6" class="instance expander" onclick="toggleSection('i:id:SwapList:Ord:6')"></span> (<a href="../base-4.10.1.0/Data-Ord.html#t:Ord">Ord</a> b, <a href="../base-4.10.1.0/Data-Ord.html#t:Ord">Ord</a> a) =&gt; <a href="../base-4.10.1.0/Data-Ord.html#t:Ord">Ord</a> (<a href="Data-SwapList.html#t:SwapList">SwapList</a> a b)</span> <a href="src/Data.SwapList.html#line-59" class="link">Source</a> <a href="#t:SwapList" class="selflink">#</a></td><td class="doc empty">&nbsp;</td></tr><tr><td colspan="2"><div id="section.i:id:SwapList:Ord:6" class="inst-details hide"><div class="subs methods"><p class="caption">Methods</p><p class="src"><a href="#v:compare">compare</a> :: <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="../base-4.10.1.0/Data-Ord.html#t:Ordering">Ordering</a> <a href="#v:compare" class="selflink">#</a></p><p class="src"><a href="#v:-60-">(&lt;)</a> :: <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="../base-4.10.1.0/Data-Bool.html#t:Bool">Bool</a> <a href="#v:-60-" class="selflink">#</a></p><p class="src"><a href="#v:-60--61-">(&lt;=)</a> :: <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="../base-4.10.1.0/Data-Bool.html#t:Bool">Bool</a> <a href="#v:-60--61-" class="selflink">#</a></p><p class="src"><a href="#v:-62-">(&gt;)</a> :: <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="../base-4.10.1.0/Data-Bool.html#t:Bool">Bool</a> <a href="#v:-62-" class="selflink">#</a></p><p class="src"><a href="#v:-62--61-">(&gt;=)</a> :: <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="../base-4.10.1.0/Data-Bool.html#t:Bool">Bool</a> <a href="#v:-62--61-" class="selflink">#</a></p><p class="src"><a href="#v:max">max</a> :: <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b <a href="#v:max" class="selflink">#</a></p><p class="src"><a href="#v:min">min</a> :: <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b <a href="#v:min" class="selflink">#</a></p></div></div></td></tr><tr><td class="src clearfix"><span class="inst-left"><span id="control.i:id:SwapList:Show:7" class="instance expander" onclick="toggleSection('i:id:SwapList:Show:7')"></span> (<a href="../base-4.10.1.0/Text-Show.html#t:Show">Show</a> b, <a href="../base-4.10.1.0/Text-Show.html#t:Show">Show</a> a) =&gt; <a href="../base-4.10.1.0/Text-Show.html#t:Show">Show</a> (<a href="Data-SwapList.html#t:SwapList">SwapList</a> a b)</span> <a href="src/Data.SwapList.html#line-59" class="link">Source</a> <a href="#t:SwapList" class="selflink">#</a></td><td class="doc empty">&nbsp;</td></tr><tr><td colspan="2"><div id="section.i:id:SwapList:Show:7" class="inst-details hide"><div class="subs methods"><p class="caption">Methods</p><p class="src"><a href="#v:showsPrec">showsPrec</a> :: <a href="../base-4.10.1.0/Data-Int.html#t:Int">Int</a> -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="../base-4.10.1.0/Text-Show.html#t:ShowS">ShowS</a> <a href="#v:showsPrec" class="selflink">#</a></p><p class="src"><a href="#v:show">show</a> :: <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b -&gt; <a href="../base-4.10.1.0/Data-String.html#t:String">String</a> <a href="#v:show" class="selflink">#</a></p><p class="src"><a href="#v:showList">showList</a> :: [<a href="Data-SwapList.html#t:SwapList">SwapList</a> a b] -&gt; <a href="../base-4.10.1.0/Text-Show.html#t:ShowS">ShowS</a> <a href="#v:showList" class="selflink">#</a></p></div></div></td></tr></table></div></div></div><div class="top"><p class="src"><a id="v:seqComonad" class="def">seqComonad</a> :: <a href="../comonad-5.0.2/Control-Comonad.html#t:Comonad">Comonad</a> f =&gt; f [a] -&gt; [f a] <a href="src/Data.SwapList.html#seqComonad" class="link">Source</a> <a href="#v:seqComonad" class="selflink">#</a></p><div class="doc"><p>Lazily seqence a <code><a href="../comonad-5.0.2/Control-Comonad.html#t:Comonad">Comonad</a></code>, by recursively <code><a href="../base-4.10.1.0/GHC-OldList.html#v:tail">tail</a></code>ing inside the <code><a href="../base-4.10.1.0/Data-Functor.html#t:Functor">Functor</a></code>,
+ then using <code><a href="../base-4.10.1.0/Data-Maybe.html#v:catMaybes">catMaybes</a></code> and <code><a href="Data-SwapList.html#v:maybeComonad">maybeComonad</a></code> to extract the values.</p></div></div><div class="top"><p class="src"><a id="v:maybeComonad" class="def">maybeComonad</a> :: <a href="../comonad-5.0.2/Control-Comonad.html#t:Comonad">Comonad</a> f =&gt; f (<a href="../base-4.10.1.0/Data-Maybe.html#t:Maybe">Maybe</a> a) -&gt; <a href="../base-4.10.1.0/Data-Maybe.html#t:Maybe">Maybe</a> (f a) <a href="src/Data.SwapList.html#maybeComonad" class="link">Source</a> <a href="#v:maybeComonad" class="selflink">#</a></p><div class="doc"><p><code><a href="../comonad-5.0.2/Control-Comonad.html#v:extract">extract</a></code> to check whether it's <code><a href="../base-4.10.1.0/Data-Maybe.html#v:Nothing">Nothing</a></code>, else use <code><code><a href="../base-4.10.1.0/Data-Maybe.html#v:Just">Just</a></code> . <code><a href="../base-4.10.1.0/Data-Functor.html#v:fmap">fmap</a></code> <code><a href="../base-4.10.1.0/Data-Maybe.html#v:fromJust">fromJust</a></code></code></p></div></div><div class="top"><p class="src"><a id="v:leftExpand" class="def">leftExpand</a> :: (a, [a]) -&gt; [<a href="../base-4.10.1.0/Data-Either.html#t:Either">Either</a> a b] -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b <a href="src/Data.SwapList.html#leftExpand" class="link">Source</a> <a href="#v:leftExpand" class="selflink">#</a></p><div class="doc"><p>Expand a <code><a href="Data-SwapList.html#t:SwapList">SwapList</a></code> on the left</p></div></div><div class="top"><p class="src"><a id="v:rightExpand" class="def">rightExpand</a> :: (b, [b]) -&gt; [<a href="../base-4.10.1.0/Data-Either.html#t:Either">Either</a> a b] -&gt; <a href="Data-SwapList.html#t:SwapList">SwapList</a> a b <a href="src/Data.SwapList.html#rightExpand" class="link">Source</a> <a href="#v:rightExpand" class="selflink">#</a></p><div class="doc"><p>Expand a <code><a href="Data-SwapList.html#t:SwapList">SwapList</a></code> on the right</p></div></div><div class="top"><p class="src"><a id="v:introductionNotes" class="def">introductionNotes</a> :: () <a href="src/Data.SwapList.html#introductionNotes" class="link">Source</a> <a href="#v:introductionNotes" class="selflink">#</a></p><div class="doc"><p>One way of thinking about this is distributing a partition on the image of a functor <code>(C -&gt; D)</code> over the functor to get a new functor from C to the partitions.</p><pre> Functor f =&gt; (f a -&gt; partition (f a)) -&gt; f (partition a) -&gt; partition (f a)
+</pre><p>OR we have a language formed along some scaffolding structure, for example a list, binary tree, etc.
+ We also have a partition of the language on its own.
+ We then want to map an arbitrary expression to a new, unique scaffolding structure,
+ where adjacent language terms within the scaffolding never are within the same equivalence classes within the language.</p><p>For example, if our partition is <code>(isLeft)</code> and our scaffolding structure is a list then the new scaffolding is formed like so:</p><pre> [Either a b] -&gt; Maybe (Either (Others a b) (Others b a))
+ Others x y = (x, Maybe (Others y x))
+</pre></div></div><div class="top"><p class="src"><a id="v:factorizationOfLanguages" class="def">factorizationOfLanguages</a> :: () <a href="src/Data.SwapList.html#factorizationOfLanguages" class="link">Source</a> <a href="#v:factorizationOfLanguages" class="selflink">#</a></p><div class="doc"><p>Factorization of languages</p><p>These are effectively factorizations of languages, as we move from a language built on scaffolding to a language of homogenous sublanguages built on two layers of scaffolding:</p><p>the original layer, that holds up the individual sublanguage of its slice of the partition
+    a layer, at least as constrained (likely smaller), that holds up the original layer</p><p>That is, this is a factorization of the scaffolding layers along a partition of the base language.</p><p>If the splitting has nice properties, we may be able to show that there isn't any overlap between the two layers and so we can lift solutions on each to the total using some sort of disjoint (xor) sum.</p><p>This would allow type-solving to be split up between the languages, allowing study of each language to be immediately lifted to the study of both.</p><p>Which is exactly what we want: nice liftings between the languages and localized addition/removal of features.</p><p>One may define a structural fold, for example:</p><pre> fold (x : ys) = fold_: x ys
+ fold []       = fold_[]
+
+ data Expr a where
+   App :: Expr a -&gt; Expr a -&gt; Expr a
+   Lit :: a
+
+ fold (App x y) = fold_App x y
+ fold (Lit x  ) = fold_Lit x
+</pre><p>We then define a set of subterms to be adjacent iff there exists some GADT term of the form:</p><pre> GADTerm :: subterm1 -&gt; subterm2 -&gt; subterm3 -&gt; ... -&gt; Expr
+</pre><p>Thus, we have that valid partitions are</p><pre> let G be the graph formed by mapping adjacent sets to complete subgraphs
+ the partition forms a valid coloring of the resulting graph
+</pre><p>Question: Is a partition on an expression valid iff it is a valid coloring of that graph? YES.</p><p>We thus have: iif the partition forms a valid coloring of every graph formed from an expression by connecting every vertex in a set of adjacent terms (GADT-wise) to every other in the set.</p><p>The partition can be uniquely distributed into the terms of the language over some scaffolding structure (the language formed by joining adjacent and equal-kinded terms recursively)</p><p>We might want to define a &quot;regular&quot; or &quot;homogenous&quot; partition, one that partitions according to leaf-GADT terms?</p><pre>       e.g. isLeft partitions over the GADT terms, Left _ -&gt; set1, Right _ -&gt; set2
+       these seem more trivial, then it seems that we can do it iff no GADT-term is adjacent to itself? Mmmm, or adjacent to itself in an ambiguous way?
+       Hmmm.. it seems that we can make it work if we have an unambiguous and correct way to squash/fold adjacent terms..
+</pre></div></div><div class="top"><p class="src"><a id="v:quickRecap" class="def">quickRecap</a> :: () <a href="src/Data.SwapList.html#quickRecap" class="link">Source</a> <a href="#v:quickRecap" class="selflink">#</a></p><div class="doc"><p>What do we have?</p><pre> We have some functor f from C -&gt; D.
+ We have a binary relation on members of D (f a) that forms an undirected graph called isAdjacent.(?)
+ We have a partition on members of C (a)
+</pre><p>With these together, we have that there is a unique way of mapping adjacent members of D with the same partition of C to a single member of `f (f a)`?
+ (Such that we get a new structure where the structure of the adjacent members is pushed out into the &quot;leaves&quot;.)</p><pre> Functor f
+ fmap :: (a -&gt; b) -&gt; f a -&gt; f b
+ (a -&gt; Partition)
+ fmap (a -&gt; Partition) -&gt; f a -&gt; f Partition
+ f a -&gt; g (f a), where
+  part :: a -&gt; Partition
+  unique :: Eq a =&gt; f a -&gt; Maybe a :: if all the elements are equal, return just that element else nothing
+  fmap part :: f a -&gt; f Partition
+  unique . fmap part :: f a -&gt; Maybe a
+  mapM (unique . fmap part) :: g (f a) -&gt; Maybe (g a)
+  isJust (mapM (unique . fmap part)) :: g (f a) -&gt; Bool
+</pre></div></div><div class="top"><p class="src"><a id="v:threePartsOfSpecification" class="def">threePartsOfSpecification</a> :: () <a href="src/Data.SwapList.html#threePartsOfSpecification" class="link">Source</a> <a href="#v:threePartsOfSpecification" class="selflink">#</a></p><div class="doc"><p>Hmmm.. we seem to have three parts:</p><pre> How do we specify the adjacency on the structure?
+ How do we specify the partition on the values?
+ How do we specify that we can join connected collections of adjacent values with the same partition? (join into the structure)
+</pre><pre> structure values
+ part :: values -&gt; Partition
+ adjacent :: value in structure -&gt; value in structure -&gt; Bool
+</pre><p>Mmmmm, we don't really care what the adjacency relation is,
+ we only care that we have a partition on the structure such that we can group values together along that partition.</p><p>What do we mean by group together?
+ Well, we'd like a unique and consistent bijection betwwen: <code>f a <a href="-">-</a> f (f a)</code> such that all of the <code>a</code>'s in any substructure <code>(f a)</code> belong to the same partition.</p><p>A partition is just an injective function.
+ So we want <code>(f a -&gt; whichPartition)</code> for the inner layer.</p><p><code>(f a -&gt; whichPartition)</code> is the <code>function :: (p :: a -&gt; b) -&gt; (f a | singleton . toSet . fmap p) -&gt; b</code></p><p>Mmmm or really do we want:</p><pre> f a -&gt; f (g a) -&gt; (g a -&gt; f a) -&gt; f (f a)
+</pre></div></div><div class="top"><p class="src"><a id="v:structurePreservingBijection" class="def">structurePreservingBijection</a> :: () <a href="src/Data.SwapList.html#structurePreservingBijection" class="link">Source</a> <a href="#v:structurePreservingBijection" class="selflink">#</a></p><div class="doc"><p>Ok, we have some structure and some structure preserving bijection that pushes as much of the structure inside the object structure?</p><pre> f (g a) <a href="-">-</a> f (g (f a))
+   T a =&gt; [T a] -&gt; T [a]
+   T a b =&gt; [T a b] -&gt; T [a] [b]
+   T a | U b =&gt; [T a b] -&gt; [T [a] | U [b]]
+   (a -&gt; b) =&gt; [a -&gt; b] -&gt; [a -&gt; [b] | [a] -&gt; b]
+   (a , b)  =&gt; Tree (a, b) -&gt; Tree (Tree a, Tree b)
+   (a | b)  =&gt; Tree (a | b) -&gt; Tree (Tree a | Tree b)
+   (a -&gt; b) =&gt; Tree (a -&gt; b) -&gt; Tree (a -&gt; Tree b | Tree a -&gt; b)
+   a? =&gt; Tree a? -&gt; Tree (Tree a)?
+     a? = a | _|_ = (?) a
+   [a] =&gt; Tree [a] -&gt; Tree (Tree _|_ | Tree a | Tree (a, [x]) | Tree [x, a] | Tree [..])
+   ([a] = (:) a [a] :: [a] | [] :: [a]) =&gt; Tree [a] -&gt; Tree [Tree a]
+</pre></div></div><div class="top"><p class="src"><a id="v:someValidPartitions" class="def">someValidPartitions</a> :: () <a href="src/Data.SwapList.html#someValidPartitions" class="link">Source</a> <a href="#v:someValidPartitions" class="selflink">#</a></p><div class="doc"><p>What are some valid partitions of some datatypes?</p><pre> f (a) -&gt; (f a)
+ f (a, b) -&gt; (f a, f b) | (a, f b) | (f a, b)
+
+ f (a1, b1) (a2, b2) &amp;&amp; a1 ~ b1 &amp;&amp; a2 ~ b2 =&gt; (f a1 a2, f b1 b2)
+ f (a1, b1) (a2, b2) &amp;&amp; a1 ~ a2 =&gt; (a1, f b1 b2)
+ f (a1, b1) (a2, b2) &amp;&amp; b1 ~ b2 =&gt; (f a1 a2, b2)
+
+ f (g a1) (g a2) | a1 ~ a2 =&gt; g (f a1 a2)
+</pre><pre> fp :: t -&gt; t -&gt; Maybe t
+
+ f (g a1 b1) (g a2 b2) | fp a1 a2 &amp;&amp; fp b1 b2 =&gt; g (fp a1 a2 ::   a) (fp b1 b2 ::   b)
+ f (g a1 b1) (g a2 b2) | fp a1 a2             =&gt; g (fp a1 a2 ::   a) (f  b1 b2 :: f b)
+ f (g a1 b1) (g a2 b2) |             fp b1 b2 =&gt; g (f  a1 a2 :: f a) (fp b1 b2 ::   b)
+ f (g a1 b1) (g a2 b2) |                      =&gt; f (f  a1 a2 :: f a) (f  b1 b2 :: f b)
+</pre><p>What are we doing here? zipping the following function:</p><pre>If fp a1 a2 (we can join a1 and a2) then fp a1 a2 else f b1 b2
+</pre><p>We must be able to do the following:</p><pre> (a1 -&gt; a2 -&gt; a3) -&gt; (b1 -&gt; b2 -&gt; b3) -&gt; g a1 b1 -&gt; g a2 b2 -&gt; g a3 b3
+</pre><p>We must also be able to tell which of the zippings apply.</p><pre>       (a1 -&gt; a2 -&gt; Either a3 (fa a1 a2)) -&gt; (b1 -&gt; b2 -&gt; Either b3 (fb b1 b2)) -&gt; g a1 b1 -&gt; g a2 b2 -&gt; g a3 b3 | g a3 (fb b1 b2) | g (fa a1 a2) b3 | g (fa a1 a2) (fb b1 b2)
+       c :: fa a -&gt; fb b -&gt; .. -&gt; fz z -&gt; c a b .. z
+       c :: fa a1 -&gt; fa a2 -&gt; c a1 a2
+       Left  :: a -&gt; Either a b
+       Right :: b -&gt; Either a b
+       fa :: a -&gt; a -&gt; f a
+       fb :: b -&gt; b -&gt; f b
+       f :: forall t. t -&gt; t -&gt; f t
+       _ :: (a -&gt; a -&gt; Either a (f a)) -&gt; (b -&gt; b -&gt; Either b (f b)) -&gt; Either a b -&gt; Either a b -&gt; Either a b | Either a (f b) | Either (f a) b | f (Either a b)
+       _ g h (F (Left  x) (Left  y)) = Left  (g x y)
+       _ g h (F (Right x) (Right y)) = Right (h x y)
+       _ g h (F        x         y ) = F x y
+       (a1 -&gt; a2 -&gt; Either a3 (c fa a1 -&gt; fa a2 -&gt;
+</pre></div></div><div class="top"><p class="src"><a id="v:someValidPartitionsNotes" class="def">someValidPartitionsNotes</a> :: () <a href="src/Data.SwapList.html#someValidPartitionsNotes" class="link">Source</a> <a href="#v:someValidPartitionsNotes" class="selflink">#</a></p><div class="doc"><p>Misc. notes:</p><pre> [(1, 2), (1, 2)] =&gt; ([1, 1], [2, 2])
+ [(1, 2), (1, 3)] =&gt; (1, [2, 3])
+ [(1, 3), (2, 3)] =&gt; ([1, 2], 3)
+ [(1, 2), (3, 4)] =&gt; ([1, 3], [2, 4])
+</pre><pre> f (a | b) -&gt; f a | f b
+ f (a | (a, b)) -&gt; f a | (f a, f b) | (a, f b) | (f a, b)
+ f (a, b, c | d) -&gt; (a, b, f c) |
+</pre><pre> f (g a) <a href="-">-</a> f (f (g a)), f (f (g a)) <a href="-">-</a> f (g (f a))
+ f . g <a href="-">-</a> f . f . g <a href="-">-</a> f . g . f
+   duplicate    :: Comonad f =&gt; f (g a) -&gt; f (f (g a))
+
+   extract      :: Comonad f =&gt; f (f (g a)) -&gt; f (g a)
+   fmap extract :: Comonad f =&gt; f (f (g a)) -&gt; f (g a)
+
+</pre></div></div><div class="top"><p class="src"><a id="v:comonadComparison" class="def">comonadComparison</a> :: () <a href="src/Data.SwapList.html#comonadComparison" class="link">Source</a> <a href="#v:comonadComparison" class="selflink">#</a></p><div class="doc"><p>If <code>f</code> is a comonad then we have:</p><pre> iso duplicate extract :: f (g a) <a href="-">-</a> f (f (g a))
+</pre><p>Suppose f is not a comonad, then do we have duplicate and extract?</p><pre> qa      :: f (g a)     -&gt; f (f (g a))
+ qb      :: f (f (g a)) -&gt; f (g a)
+ qc      :: f (f (g a)) -&gt; f (g (f a))
+ qd      :: f (g (f a)) -&gt; f (f (g a))
+ qc . qa :: f (g a)     -&gt; f (g (f a))
+ qb . qd :: f (g (f a)) -&gt; f (g a)
+ qa . qb = id
+ qb . qa = id
+ qc . qd = id
+ qd . qc = id
+
+ f . g     = f . f . g
+ f . f . g = f . g . f
+ f . g     = f . g . f
+
+ (f . g) . f = (f . g . f) . f
+ qa      :: f . g     = f . f . g
+ qc      :: f . f . g -&gt; f . g . f
+ qd      :: f (g (f a)) -&gt; f (f (g a))
+ qc . qa :: f (g a)     -&gt; f (g (f a))
+ qb . qd :: f (g (f a)) -&gt; f (g a)
+
+
+Note 1: we don't have any way to derive a function of the type: (f a -&gt; a)
+ so we know that we can't get (Comonad f) for free
+
+Note 2: we don't have any way to derive a function of the type: (g a -&gt; a)
+ so we know that we can't get (Comonad g) for free
+
+Note 3: we don't have any way to derive a function of the type: (a -&gt; _)
+ so we know that we can't get Monad f, Monad g, Monad (f . g), Monad (g . f), etc for free
+
+ (f (g a) -&gt; f (f (g a))) -&gt; (f a -&gt; f (f a))
+   wa :: f a -&gt; f (g a)
+   wb :: f (f (g a)) -&gt; f (f a)
+ (f (f (g a)) -&gt; f (g a)) -&gt; (f a -&gt; a)
+   wc :: f a -&gt; f (f (g a))
+   wd :: f (g a) -&gt; a
+
+ wd . wa :: f a -&gt; a
+ wb . wc :: f a -&gt; f (f a)
+ With both:
+   (f (g a) -&gt; a) . (f a -&gt; f (g a)) = f a -&gt; a
+
+ qq :: f (g a)     -&gt; f (f (g a))
+ ww :: f (f (g a)) -&gt; f (g a)
+ qq . ww = id
+ ww . qq = id
+
+ ww = extract = fmap extract
+ qq = duplicate
+</pre><p>Ff this is the case, then I believe that it implies <code>(g a <a href="-">-</a> a)</code>.</p><pre> extract   :: f a -&gt; a
+ duplicate :: f a -&gt; f (f a)
+ duplicate .      extract = id
+ duplicate . fmap extract = id
+
+ fmap distribute :: Functor     f, Distributive g =&gt; f (f (g a)) -&gt; f (g (f a))
+ fmap sequenceA  :: Traversable f, Applicative  g =&gt; f (f (g a)) -&gt; f (g (f a))
+
+ fmap distribute :: Distributive f, Functor     g =&gt; f (g (f a)) -&gt; f (f (g a))
+ fmap sequenceA  :: Applicative  f, Traversable g =&gt; f (g (f a)) -&gt; f (f (g a))
+
+ Functor f, Functor g
+  Comonad f
+    Distributive f, Distributive g
+    Distributive f, Traversable  f, Applicative g
+    Applicative  f, Traversable  g, Distributive g
+    Applicative  f, Traversable  g, Traversable f, Applicative g
+</pre></div></div><div class="top"><p class="src"><a id="v:seriesJoinPoints" class="def">seriesJoinPoints</a> :: () <a href="src/Data.SwapList.html#seriesJoinPoints" class="link">Source</a> <a href="#v:seriesJoinPoints" class="selflink">#</a></p><div class="doc"><p>Series join points:</p><p>Here's the idea: We take a list (series) of some datatype <code>t</code> and we replace it with a list of <code>t (_)</code>,
+ such that consecutive elements of the same form (e.g. <code>Left x, Left y || Right x, Right y || (x, y), (z, w)</code>)
+ are joined together along equivalences and the list pops out within the parameter (e.g. <code>[(a, b1), (a, b2)] -&gt; (a, [b1,b2])</code>).</p><p>What's required for this to be a unique construction is for the structures to be partitioned by their &quot;join points&quot;.</p><pre> Left (_ :: a), Right (_ :: b) -&gt; Left (_ :: [a]), Right (_ :: [b])
+ (_ :: a, _ :: b) -&gt; (_ :: a, _ :: b)
+ Nothing, Just (_ :: a) -&gt; Nothing, Just [a]
+</pre><p>Ahh, for it to be unique, each pair must map to either zero (don't match) or one (do match) possible combinations.</p><p>Question: Is this true iff there is one possible parsing of every sentence in such a language?
+ In other words, it is unambiguous?</p><p>Note: In other words, we have a binary relation:</p><pre> (~) :: (a :: k :: L) -&gt; (b :: k  :: L) -&gt; ('Just (a ~~ b) :: Maybe k :: L)
+ (~) :: (a :: k :: L) -&gt; (b :: k' :: L) -&gt; ('Nothing       :: Maybe k :: L)
+</pre><p>It must be at least left/right (right, w.l.o.g.) associative for fixed <code>k</code>.</p><p>So we have three layers:</p><pre> A language: L
+ The kind level (where terms with quivalent kinds combine)
+ The term level or GADT term level (The AST of the language)
+</pre><p>If we attempt to combine two terms, for the combination to be unique, we must have that their kinds are equal (that is, the kinds must form a partition on the types).</p><pre> Within a fixed kind, the operation must be associative (or just right/left associative?)
+ Between two kinds, I believe it may also be associative (hmm, it really probably only needs to be right/left associative)
+</pre></div></div><div class="top"><p class="src"><a id="v:strongerVersionSequence" class="def">strongerVersionSequence</a> :: () <a href="src/Data.SwapList.html#strongerVersionSequence" class="link">Source</a> <a href="#v:strongerVersionSequence" class="selflink">#</a></p><div class="doc"><p>An even stronger version forces a sequence on the resulting datatype, for example, for a type-sum over a pair, we have the language:</p><pre> L = { a(ba)*, b(ab)* }
+</pre><p>Where the language <code>L</code> is equivalent to the language of sequences formed by squashing over a list-like or linear data structure.</p><p>Note: In a complete binary tree as the outer structure, we instead have that the <code>a,b</code>'s form a two-coloring of the binary tree.
+ However, <code>L</code> is still the language generated.</p><p>More precisely:</p><pre> a | b | (x :: a) -&gt; a, (b, (x :: a)), (b, (x :: a)) | (x :: b) -&gt; b, (a, (x :: b)), (a, (x :: b))
+</pre><p>Thus it seems that the inner structure is determined by the outer one (In this case, the inner structure is L and the outer structure is Either)</p></div></div><div class="top"><p class="src"><a id="v:dataFGLanglaws" class="def">dataFGLanglaws</a> :: () <a href="src/Data.SwapList.html#dataFGLanglaws" class="link">Source</a> <a href="#v:dataFGLanglaws" class="selflink">#</a></p><div class="doc"><p>In Data.FGLang, we found that the laws:</p><pre> f (g a) <a href="-">-</a> f (f (g a)) <a href="-">-</a> f (g (f a))
+</pre><p>(Where the <code>(<a href="-">-</a>)</code> are bijections, and <code>f,g</code> are Functors.)
+ generate a regular language of the form: <code>(F+)G(F?)</code>
+  representing what is reachable from <code>f (g a)</code>, i.e. the non-free part of the language.</p><p>This immediately shows that none of the following classes are implied:</p><pre> Monad, Comonad, Applicative, Traversable, Distributive
+</pre></div></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.18.1</p></div></body></html>

@@ -1,0 +1,560 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><a name="line-2"></a><span class="hs-pragma">{-# LANGUAGE InstanceSigs #-}</span><span>
+</span><a name="line-3"></a><span class="hs-pragma">{-# LANGUAGE KindSignatures #-}</span><span>
+</span><a name="line-4"></a><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
+</span><a name="line-5"></a><span>
+</span><a name="line-6"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">SwapList</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-7"></a><span>
+</span><a name="line-8"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Category</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Category</span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-9"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Comonad</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Comonad</span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-10"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Bifunctor</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Bifunctor</span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-11"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Maybe</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">fromJust</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">listToMaybe</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">catMaybes</span><span class="hs-special">)</span><span>
+</span><a name="line-12"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Prelude</span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">unlines</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">lines</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">id</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator hs-var">.</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-13"></a><span class="hs-keyword">import</span><span> </span><a href="Data.Bidistributable.html"><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Bidistributable</span></a><span> </span><span class="hs-special">(</span><a href="Data.Bidistributable.html#Swap"><span class="hs-identifier hs-type">Swap</span></a><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-14"></a><span class="hs-keyword">import</span><span> </span><a href="Data.Rope.html"><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Rope</span></a><span> </span><span class="hs-special">(</span><a href="Data.Rope.html#Rope"><span class="hs-identifier hs-type">Rope</span></a><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><a href="Data.Rope.html#Twist"><span class="hs-identifier hs-type">Twist</span></a><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-15"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Prelude</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">P</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">concat</span><span class="hs-special">)</span><span>
+</span><a name="line-16"></a><span>
+</span><a name="line-17"></a><span>
+</span><a name="line-18"></a><span>
+</span><a name="line-19"></a><span class="hs-comment">-- | `expand` and `contract`</span><span>
+</span><a name="line-20"></a><span class="hs-comment">--</span><span>
+</span><a name="line-21"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-22"></a><span class="hs-comment">-- dist :: f (p a b) -&gt; RopeT m p (f a) (f b)</span><span>
+</span><a name="line-23"></a><span class="hs-comment">--</span><span>
+</span><a name="line-24"></a><span class="hs-comment">-- dist :: f (Either a b) -&gt; RopeT Maybe (,) (f a) (f b)</span><span>
+</span><a name="line-25"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-26"></a><span class="hs-comment">--</span><span>
+</span><a name="line-27"></a><span class="hs-keyword">class</span><span> </span><span class="hs-identifier hs-type">Functor</span><span> </span><a href="#local-6989586621679076943"><span class="hs-identifier hs-type">f</span></a><span> </span><span class="hs-glyph">=&gt;</span><span> </span><a name="Biexpandcontract"><a href="Data.SwapList.html#Biexpandcontract"><span class="hs-identifier">Biexpandcontract</span></a></a><span> </span><span class="hs-special">(</span><a name="local-6989586621679076941"><a href="#local-6989586621679076941"><span class="hs-identifier">q</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-operator hs-type">*</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-operator hs-type">*</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-operator hs-type">*</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><a name="local-6989586621679076942"><a href="#local-6989586621679076942"><span class="hs-identifier">p</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-operator hs-type">*</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-operator hs-type">*</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-operator hs-type">*</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><a name="local-6989586621679076943"><a href="#local-6989586621679076943"><span class="hs-identifier">f</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-operator hs-type">*</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-operator hs-type">*</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-28"></a><span>  </span><span class="hs-identifier">expand</span><span>   </span><span class="hs-glyph">::</span><span> </span><a href="#local-6989586621679076943"><span class="hs-identifier hs-type">f</span></a><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076942"><span class="hs-identifier hs-type">p</span></a><span> </span><a href="#local-6989586621679076944"><span class="hs-identifier hs-type">a</span></a><span> </span><a href="#local-6989586621679076945"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="#local-6989586621679076941"><span class="hs-identifier hs-type">q</span></a><span> </span><span class="hs-special">(</span><span> </span><a href="#local-6989586621679076944"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span> </span><a href="#local-6989586621679076945"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">)</span><span>
+</span><a name="line-29"></a><span>  </span><span class="hs-identifier">contract</span><span> </span><span class="hs-glyph">::</span><span> </span><a href="#local-6989586621679076941"><span class="hs-identifier hs-type">q</span></a><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076943"><span class="hs-identifier hs-type">f</span></a><span> </span><a href="#local-6989586621679076946"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076943"><span class="hs-identifier hs-type">f</span></a><span> </span><a href="#local-6989586621679076947"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="#local-6989586621679076943"><span class="hs-identifier hs-type">f</span></a><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076942"><span class="hs-identifier hs-type">p</span></a><span> </span><a href="#local-6989586621679076946"><span class="hs-identifier hs-type">a</span></a><span> </span><a href="#local-6989586621679076947"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">)</span><span>
+</span><a name="line-30"></a><span>
+</span><a name="line-31"></a><span>
+</span><a name="line-32"></a><span class="hs-comment">-- | An example data type for `Biexpandcontract`</span><span>
+</span><a name="line-33"></a><span class="hs-comment">--</span><span>
+</span><a name="line-34"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-35"></a><span class="hs-comment">--  X a b = X (a, Maybe (Y a b))</span><span>
+</span><a name="line-36"></a><span class="hs-comment">--  Y a b = Y (b, Maybe (X a b))</span><span>
+</span><a name="line-37"></a><span class="hs-comment">--</span><span>
+</span><a name="line-38"></a><span class="hs-comment">--  Z a b = Either (X a b) (Y a b)</span><span>
+</span><a name="line-39"></a><span class="hs-comment">--</span><span>
+</span><a name="line-40"></a><span class="hs-comment">--  W a b = W (a, Maybe (W b a))</span><span>
+</span><a name="line-41"></a><span class="hs-comment">--  Z a b = Either (W a b) (W b a)</span><span>
+</span><a name="line-42"></a><span class="hs-comment">--  Z a b = let w x y = (x, Maybe (w y x)) in Either (w a b) (w b a)</span><span>
+</span><a name="line-43"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-44"></a><span class="hs-comment">--</span><span>
+</span><a name="line-45"></a><span class="hs-comment">--</span><span>
+</span><a name="line-46"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-47"></a><span class="hs-comment">--  [(a, b)]     -&gt; ([a], [b])</span><span>
+</span><a name="line-48"></a><span class="hs-comment">--  [Either a b] -&gt; Either (w a b) (flip w a b)</span><span>
+</span><a name="line-49"></a><span class="hs-comment">--  f (p a b)    -&gt; p (g a b) (h a b)</span><span>
+</span><a name="line-50"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-51"></a><span class="hs-comment">--</span><span>
+</span><a name="line-52"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-53"></a><span class="hs-comment">--  Maybe (Either (NonEmpty a) (NonEmpty b), SwapList a b)</span><span>
+</span><a name="line-54"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-55"></a><span class="hs-comment">--</span><span>
+</span><a name="line-56"></a><span class="hs-keyword">data</span><span> </span><a name="SwapList"><a href="Data.SwapList.html#SwapList"><span class="hs-identifier">SwapList</span></a></a><span> </span><a name="local-6989586621679076939"><a href="#local-6989586621679076939"><span class="hs-identifier">a</span></a></a><span> </span><a name="local-6989586621679076940"><a href="#local-6989586621679076940"><span class="hs-identifier">b</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a name="SwapLeft"><a href="Data.SwapList.html#SwapLeft"><span class="hs-identifier">SwapLeft</span></a></a><span>  </span><a href="#local-6989586621679076939"><span class="hs-identifier hs-type">a</span></a><span> </span><span class="hs-special">[</span><a href="#local-6989586621679076939"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><a href="#local-6989586621679076939"><span class="hs-identifier hs-type">a</span></a><span> </span><a href="#local-6989586621679076940"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">)</span><span>
+</span><a name="line-57"></a><span>                  </span><span class="hs-glyph">|</span><span> </span><a name="SwapRight"><a href="Data.SwapList.html#SwapRight"><span class="hs-identifier">SwapRight</span></a></a><span> </span><a href="#local-6989586621679076940"><span class="hs-identifier hs-type">b</span></a><span> </span><span class="hs-special">[</span><a href="#local-6989586621679076940"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><a href="#local-6989586621679076939"><span class="hs-identifier hs-type">a</span></a><span> </span><a href="#local-6989586621679076940"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">)</span><span>
+</span><a name="line-58"></a><span>                  </span><span class="hs-glyph">|</span><span> </span><a name="SwapEmpty"><a href="Data.SwapList.html#SwapEmpty"><span class="hs-identifier">SwapEmpty</span></a></a><span>
+</span><a name="line-59"></a><span>                  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Eq</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Ord</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Show</span><span class="hs-special">)</span><span>
+</span><a name="line-60"></a><span>
+</span><a name="line-61"></a><span class="hs-keyword">instance</span><span> </span><span class="hs-identifier hs-type">Bifunctor</span><span> </span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-62"></a><span>  </span><a name="local-8214565720323787714"><span class="hs-identifier">bimap</span></a><span> </span><a name="local-6989586621679076979"><a href="#local-6989586621679076979"><span class="hs-identifier">f</span></a></a><span> </span><a name="local-6989586621679076980"><a href="#local-6989586621679076980"><span class="hs-identifier">g</span></a></a><span> </span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapLeft"><span class="hs-identifier hs-var">SwapLeft</span></a><span>  </span><a name="local-6989586621679076981"><a href="#local-6989586621679076981"><span class="hs-identifier">x</span></a></a><span> </span><a name="local-6989586621679076982"><a href="#local-6989586621679076982"><span class="hs-identifier">xs</span></a></a><span> </span><a name="local-6989586621679076983"><a href="#local-6989586621679076983"><span class="hs-identifier">s</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="Data.SwapList.html#SwapLeft"><span class="hs-identifier hs-var">SwapLeft</span></a><span>  </span><span class="hs-special">(</span><a href="#local-6989586621679076979"><span class="hs-identifier hs-var">f</span></a><span> </span><a href="#local-6989586621679076981"><span class="hs-identifier hs-var">x</span></a><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">fmap</span><span> </span><a href="#local-6989586621679076979"><span class="hs-identifier hs-var">f</span></a><span> </span><a href="#local-6989586621679076982"><span class="hs-identifier hs-var">xs</span></a><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">bimap</span><span> </span><a href="#local-6989586621679076979"><span class="hs-identifier hs-var">f</span></a><span> </span><a href="#local-6989586621679076980"><span class="hs-identifier hs-var">g</span></a><span> </span><a href="#local-6989586621679076983"><span class="hs-identifier hs-var">s</span></a><span class="hs-special">)</span><span>
+</span><a name="line-63"></a><span>  </span><span class="hs-identifier">bimap</span><span> </span><a name="local-6989586621679076984"><a href="#local-6989586621679076984"><span class="hs-identifier">f</span></a></a><span> </span><a name="local-6989586621679076985"><a href="#local-6989586621679076985"><span class="hs-identifier">g</span></a></a><span> </span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapRight"><span class="hs-identifier hs-var">SwapRight</span></a><span> </span><a name="local-6989586621679076986"><a href="#local-6989586621679076986"><span class="hs-identifier">x</span></a></a><span> </span><a name="local-6989586621679076987"><a href="#local-6989586621679076987"><span class="hs-identifier">xs</span></a></a><span> </span><a name="local-6989586621679076988"><a href="#local-6989586621679076988"><span class="hs-identifier">s</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="Data.SwapList.html#SwapRight"><span class="hs-identifier hs-var">SwapRight</span></a><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076985"><span class="hs-identifier hs-var">g</span></a><span> </span><a href="#local-6989586621679076986"><span class="hs-identifier hs-var">x</span></a><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">fmap</span><span> </span><a href="#local-6989586621679076985"><span class="hs-identifier hs-var">g</span></a><span> </span><a href="#local-6989586621679076987"><span class="hs-identifier hs-var">xs</span></a><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">bimap</span><span> </span><a href="#local-6989586621679076984"><span class="hs-identifier hs-var">f</span></a><span> </span><a href="#local-6989586621679076985"><span class="hs-identifier hs-var">g</span></a><span> </span><a href="#local-6989586621679076988"><span class="hs-identifier hs-var">s</span></a><span class="hs-special">)</span><span>
+</span><a name="line-64"></a><span>  </span><span class="hs-identifier">bimap</span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span>  </span><span class="hs-identifier">_</span><span>                 </span><span class="hs-glyph">=</span><span> </span><a href="Data.SwapList.html#SwapEmpty"><span class="hs-identifier hs-var">SwapEmpty</span></a><span>
+</span><a name="line-65"></a><span>
+</span><a name="line-66"></a><span class="hs-keyword">instance</span><span> </span><a href="Data.Bidistributable.html#Swap"><span class="hs-identifier hs-type">Swap</span></a><span> </span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-67"></a><span>  </span><span class="hs-identifier">swap</span><span> </span><span class="hs-glyph">::</span><span> </span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><a href="#local-6989586621679076971"><span class="hs-identifier hs-type">a</span></a><span> </span><a href="#local-6989586621679076972"><span class="hs-identifier hs-type">b</span></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><a href="#local-6989586621679076972"><span class="hs-identifier hs-type">b</span></a><span> </span><a href="#local-6989586621679076971"><span class="hs-identifier hs-type">a</span></a><span>
+</span><a name="line-68"></a><span>  </span><a name="local-8214565720323846725"><a href="Data.Bidistributable.html#swap"><span class="hs-identifier">swap</span></a></a><span> </span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapLeft"><span class="hs-identifier hs-var">SwapLeft</span></a><span>  </span><a name="local-6989586621679076973"><a href="#local-6989586621679076973"><span class="hs-identifier">x</span></a></a><span> </span><a name="local-6989586621679076974"><a href="#local-6989586621679076974"><span class="hs-identifier">xs</span></a></a><span> </span><a name="local-6989586621679076975"><a href="#local-6989586621679076975"><span class="hs-identifier">s</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="Data.SwapList.html#SwapRight"><span class="hs-identifier hs-var">SwapRight</span></a><span> </span><a href="#local-6989586621679076973"><span class="hs-identifier hs-var">x</span></a><span> </span><a href="#local-6989586621679076974"><span class="hs-identifier hs-var">xs</span></a><span> </span><span class="hs-special">(</span><a href="Data.Bidistributable.html#swap"><span class="hs-identifier hs-var">swap</span></a><span> </span><a href="#local-6989586621679076975"><span class="hs-identifier hs-var">s</span></a><span class="hs-special">)</span><span>
+</span><a name="line-69"></a><span>  </span><span class="hs-identifier">swap</span><span> </span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapRight"><span class="hs-identifier hs-var">SwapRight</span></a><span> </span><a name="local-6989586621679076976"><a href="#local-6989586621679076976"><span class="hs-identifier">x</span></a></a><span> </span><a name="local-6989586621679076977"><a href="#local-6989586621679076977"><span class="hs-identifier">xs</span></a></a><span> </span><a name="local-6989586621679076978"><a href="#local-6989586621679076978"><span class="hs-identifier">s</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="Data.SwapList.html#SwapLeft"><span class="hs-identifier hs-var">SwapLeft</span></a><span>  </span><a href="#local-6989586621679076976"><span class="hs-identifier hs-var">x</span></a><span> </span><a href="#local-6989586621679076977"><span class="hs-identifier hs-var">xs</span></a><span> </span><span class="hs-special">(</span><a href="Data.Bidistributable.html#swap"><span class="hs-identifier hs-var">swap</span></a><span> </span><a href="#local-6989586621679076978"><span class="hs-identifier hs-var">s</span></a><span class="hs-special">)</span><span>
+</span><a name="line-70"></a><span>  </span><span class="hs-identifier">swap</span><span>  </span><span class="hs-identifier">_</span><span>                 </span><span class="hs-glyph">=</span><span> </span><a href="Data.SwapList.html#SwapEmpty"><span class="hs-identifier hs-var">SwapEmpty</span></a><span>
+</span><a name="line-71"></a><span>
+</span><a name="line-72"></a><span>
+</span><a name="line-73"></a><span class="hs-comment">-- | Uses `seqComonad`</span><span>
+</span><a name="line-74"></a><span class="hs-keyword">instance</span><span> </span><span class="hs-identifier hs-type">Comonad</span><span> </span><a href="#local-6989586621679076963"><span class="hs-identifier hs-type">f</span></a><span> </span><span class="hs-glyph">=&gt;</span><span> </span><a href="Data.Rope.html#Twist"><span class="hs-identifier hs-type">Twist</span></a><span> </span><a href="#local-6989586621679076963"><span class="hs-identifier hs-type">f</span></a><span> </span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-75"></a><span>  </span><span class="hs-identifier">twist</span><span> </span><span class="hs-glyph">::</span><span> </span><a href="#local-6989586621679076963"><span class="hs-identifier hs-type">f</span></a><span> </span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><a href="#local-6989586621679076964"><span class="hs-identifier hs-type">a</span></a><span> </span><a href="#local-6989586621679076965"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="Data.Rope.html#Rope"><span class="hs-identifier hs-type">Rope</span></a><span> </span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076963"><span class="hs-identifier hs-type">f</span></a><span> </span><a href="#local-6989586621679076964"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076963"><span class="hs-identifier hs-type">f</span></a><span> </span><a href="#local-6989586621679076965"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">)</span><span>
+</span><a name="line-76"></a><span>  </span><a name="local-8214565720323849039"><a href="Data.Rope.html#twist"><span class="hs-identifier">twist</span></a></a><span> </span><a name="local-6989586621679076966"><a href="#local-6989586621679076966"><span class="hs-identifier">xs</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Data.Rope.html#Rope"><span class="hs-identifier hs-var">Rope</span></a><span> </span><span class="hs-operator hs-var">$</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="hs-identifier hs-var">extract</span><span> </span><a href="#local-6989586621679076966"><span class="hs-identifier hs-var">xs</span></a><span> </span><span class="hs-keyword">of</span><span>
+</span><a name="line-77"></a><span>                      </span><a href="Data.SwapList.html#SwapLeft"><span class="hs-identifier hs-var">SwapLeft</span></a><span>  </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="Data.SwapList.html#SwapLeft"><span class="hs-identifier hs-var">SwapLeft</span></a><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-glyph">~</span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapLeft"><span class="hs-identifier hs-var">SwapLeft</span></a><span> </span><a name="local-6989586621679076967"><a href="#local-6989586621679076967"><span class="hs-identifier">y</span></a></a><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="#local-6989586621679076967"><span class="hs-identifier hs-var">y</span></a><span class="hs-special">)</span><span> </span><span class="hs-operator hs-var">&lt;$&gt;</span><span> </span><a href="#local-6989586621679076966"><span class="hs-identifier hs-var">xs</span></a><span class="hs-special">)</span><span>
+</span><a name="line-78"></a><span>                                                  </span><span class="hs-special">(</span><a href="Data.SwapList.html#seqComonad"><span class="hs-identifier hs-var">seqComonad</span></a><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier hs-var">fmap</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-glyph">~</span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapLeft"><span class="hs-identifier hs-var">SwapLeft</span></a><span> </span><span class="hs-identifier">_</span><span> </span><a name="local-6989586621679076968"><a href="#local-6989586621679076968"><span class="hs-identifier">ys</span></a></a><span> </span><span class="hs-identifier">_</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="#local-6989586621679076968"><span class="hs-identifier hs-var">ys</span></a><span class="hs-special">)</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><a href="#local-6989586621679076966"><span class="hs-identifier hs-var">xs</span></a><span class="hs-special">)</span><span>
+</span><a name="line-79"></a><span>                                                  </span><span class="hs-special">(</span><span class="hs-identifier">pullRope</span><span> </span><span class="hs-operator hs-var">.</span><span> </span><a href="Data.Rope.html#twist"><span class="hs-identifier hs-var">twist</span></a><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier hs-var">fmap</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-glyph">~</span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapLeft"><span class="hs-identifier hs-var">SwapLeft</span></a><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span> </span><a name="local-6989586621679076969"><a href="#local-6989586621679076969"><span class="hs-identifier">s</span></a></a><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="#local-6989586621679076969"><span class="hs-identifier hs-var">s</span></a><span class="hs-special">)</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><a href="#local-6989586621679076966"><span class="hs-identifier hs-var">xs</span></a><span class="hs-special">)</span><span>
+</span><a name="line-80"></a><span>                      </span><a href="Data.SwapList.html#SwapRight"><span class="hs-identifier hs-var">SwapRight</span></a><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier">pullRope</span><span> </span><span class="hs-operator hs-var">.</span><span> </span><a href="Data.Rope.html#twist"><span class="hs-identifier hs-var">twist</span></a><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier hs-var">fmap</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-glyph">~</span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapRight"><span class="hs-identifier hs-var">SwapRight</span></a><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span> </span><a name="local-6989586621679076970"><a href="#local-6989586621679076970"><span class="hs-identifier">s</span></a></a><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="#local-6989586621679076970"><span class="hs-identifier hs-var">s</span></a><span class="hs-special">)</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><a href="#local-6989586621679076966"><span class="hs-identifier hs-var">xs</span></a><span>
+</span><a name="line-81"></a><span>                      </span><span class="hs-identifier">_</span><span>               </span><span class="hs-glyph">-&gt;</span><span> </span><a href="Data.SwapList.html#SwapEmpty"><span class="hs-identifier hs-var">SwapEmpty</span></a><span>
+</span><a name="line-82"></a><span>
+</span><a name="line-83"></a><span class="hs-comment">-- | Lazily seqence a `Comonad`, by recursively `tail`ing inside the `Functor`,</span><span>
+</span><a name="line-84"></a><span class="hs-comment">-- then using `catMaybes` and `maybeComonad` to extract the values.</span><span>
+</span><a name="line-85"></a><span class="hs-identifier">seqComonad</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Comonad</span><span> </span><a href="#local-6989586621679076995"><span class="hs-identifier hs-type">f</span></a><span> </span><span class="hs-glyph">=&gt;</span><span> </span><a href="#local-6989586621679076995"><span class="hs-identifier hs-type">f</span></a><span> </span><span class="hs-special">[</span><a href="#local-6989586621679076996"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><a href="#local-6989586621679076995"><span class="hs-identifier hs-type">f</span></a><span> </span><a href="#local-6989586621679076996"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">]</span><span>
+</span><a name="line-86"></a><a name="seqComonad"><a href="Data.SwapList.html#seqComonad"><span class="hs-identifier">seqComonad</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">catMaybes</span><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier hs-var">fmap</span><span> </span><span class="hs-special">(</span><a href="Data.SwapList.html#maybeComonad"><span class="hs-identifier hs-var">maybeComonad</span></a><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier hs-var">fmap</span><span> </span><span class="hs-identifier hs-var">listToMaybe</span><span class="hs-special">)</span><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier hs-var">iterate</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">fmap</span><span> </span><span class="hs-identifier hs-var">tail</span><span class="hs-special">)</span><span>
+</span><a name="line-87"></a><span>
+</span><a name="line-88"></a><span class="hs-comment">-- | `extract` to check whether it's `Nothing`, else use @`Just` . `fmap` `fromJust`@</span><span>
+</span><a name="line-89"></a><span class="hs-identifier">maybeComonad</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Comonad</span><span> </span><a href="#local-6989586621679076993"><span class="hs-identifier hs-type">f</span></a><span> </span><span class="hs-glyph">=&gt;</span><span> </span><a href="#local-6989586621679076993"><span class="hs-identifier hs-type">f</span></a><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Maybe</span><span> </span><a href="#local-6989586621679076994"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Maybe</span><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076993"><span class="hs-identifier hs-type">f</span></a><span> </span><a href="#local-6989586621679076994"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">)</span><span>
+</span><a name="line-90"></a><a name="maybeComonad"><a href="Data.SwapList.html#maybeComonad"><span class="hs-identifier">maybeComonad</span></a></a><span> </span><a name="local-6989586621679076997"><a href="#local-6989586621679076997"><span class="hs-identifier">xs</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">maybe</span><span> </span><span class="hs-identifier hs-var">Nothing</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-var">Just</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">fromJust</span><span> </span><span class="hs-operator hs-var">&lt;$&gt;</span><span> </span><a href="#local-6989586621679076997"><span class="hs-identifier hs-var">xs</span></a><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">extract</span><span> </span><a href="#local-6989586621679076997"><span class="hs-identifier hs-var">xs</span></a><span class="hs-special">)</span><span>
+</span><a name="line-91"></a><span>
+</span><a name="line-92"></a><span>
+</span><a name="line-93"></a><span class="hs-comment">-- | uses `leftExpand` and `rightExpand`</span><span>
+</span><a name="line-94"></a><span class="hs-comment">--</span><span>
+</span><a name="line-95"></a><span class="hs-comment">-- Notes:</span><span>
+</span><a name="line-96"></a><span class="hs-comment">--</span><span>
+</span><a name="line-97"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-98"></a><span class="hs-comment">-- contract :: q [a] [b] -&gt; [Either a b]</span><span>
+</span><a name="line-99"></a><span class="hs-comment">--</span><span>
+</span><a name="line-100"></a><span class="hs-comment">-- [[a], [b], [a], [b], [a], [b]]</span><span>
+</span><a name="line-101"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-102"></a><span class="hs-keyword">instance</span><span> </span><a href="Data.SwapList.html#Biexpandcontract"><span class="hs-identifier hs-type">Biexpandcontract</span></a><span> </span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><span class="hs-identifier hs-type">Either</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-103"></a><span>  </span><span class="hs-identifier">expand</span><span>   </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-identifier hs-type">Either</span><span> </span><a href="#local-6989586621679076948"><span class="hs-identifier hs-type">a</span></a><span> </span><a href="#local-6989586621679076949"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><a href="#local-6989586621679076948"><span class="hs-identifier hs-type">a</span></a><span> </span><a href="#local-6989586621679076949"><span class="hs-identifier hs-type">b</span></a><span>
+</span><a name="line-104"></a><span>  </span><a name="local-8214565720323851833"><a href="Data.SwapList.html#expand"><span class="hs-identifier">expand</span></a></a><span> </span><a name="local-6989586621679076952"><a href="#local-6989586621679076952"><span class="hs-identifier">x</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><a href="#local-6989586621679076952"><span class="hs-identifier hs-var">x</span></a><span> </span><span class="hs-keyword">of</span><span>
+</span><a name="line-105"></a><span>               </span><span class="hs-special">(</span><span class="hs-identifier hs-var">Left</span><span>  </span><a name="local-6989586621679076953"><a href="#local-6989586621679076953"><span class="hs-identifier">x_</span></a></a><span class="hs-glyph">:</span><a name="local-6989586621679076954"><a href="#local-6989586621679076954"><span class="hs-identifier">xs</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="Data.SwapList.html#leftExpand"><span class="hs-identifier hs-var">leftExpand</span></a><span>  </span><span class="hs-special">(</span><a href="#local-6989586621679076953"><span class="hs-identifier hs-var">x_</span></a><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><a href="#local-6989586621679076954"><span class="hs-identifier hs-var">xs</span></a><span>
+</span><a name="line-106"></a><span>               </span><span class="hs-special">(</span><span class="hs-identifier hs-var">Right</span><span> </span><a name="local-6989586621679076955"><a href="#local-6989586621679076955"><span class="hs-identifier">x_</span></a></a><span class="hs-glyph">:</span><a name="local-6989586621679076956"><a href="#local-6989586621679076956"><span class="hs-identifier">xs</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="Data.SwapList.html#rightExpand"><span class="hs-identifier hs-var">rightExpand</span></a><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076955"><span class="hs-identifier hs-var">x_</span></a><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><a href="#local-6989586621679076956"><span class="hs-identifier hs-var">xs</span></a><span>
+</span><a name="line-107"></a><span>               </span><span class="hs-special">(</span><span>      </span><span class="hs-identifier">_</span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="Data.SwapList.html#SwapEmpty"><span class="hs-identifier hs-var">SwapEmpty</span></a><span>
+</span><a name="line-108"></a><span>
+</span><a name="line-109"></a><span>  </span><span class="hs-identifier">contract</span><span> </span><span class="hs-glyph">::</span><span> </span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><span class="hs-special">[</span><a href="#local-6989586621679076950"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">]</span><span> </span><span class="hs-special">[</span><a href="#local-6989586621679076951"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-identifier hs-type">Either</span><span> </span><a href="#local-6989586621679076950"><span class="hs-identifier hs-type">a</span></a><span> </span><a href="#local-6989586621679076951"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">]</span><span>
+</span><a name="line-110"></a><span>  </span><a name="local-8214565720323851834"><a href="Data.SwapList.html#contract"><span class="hs-identifier">contract</span></a></a><span> </span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapLeft"><span class="hs-identifier hs-var">SwapLeft</span></a><span>  </span><a name="local-6989586621679076957"><a href="#local-6989586621679076957"><span class="hs-identifier">x</span></a></a><span> </span><a name="local-6989586621679076958"><a href="#local-6989586621679076958"><span class="hs-identifier">xs</span></a></a><span> </span><a name="local-6989586621679076959"><a href="#local-6989586621679076959"><span class="hs-identifier">xxs</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">fmap</span><span> </span><span class="hs-identifier hs-var">Left</span><span>  </span><span class="hs-special">(</span><span class="hs-identifier hs-var">P</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">concat</span><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076957"><span class="hs-identifier hs-var">x</span></a><span class="hs-glyph">:</span><a href="#local-6989586621679076958"><span class="hs-identifier hs-var">xs</span></a><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-operator hs-var">++</span><span> </span><a href="Data.SwapList.html#contract"><span class="hs-identifier hs-var">contract</span></a><span> </span><a href="#local-6989586621679076959"><span class="hs-identifier hs-var">xxs</span></a><span>
+</span><a name="line-111"></a><span>  </span><span class="hs-identifier">contract</span><span> </span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapRight"><span class="hs-identifier hs-var">SwapRight</span></a><span> </span><a name="local-6989586621679076960"><a href="#local-6989586621679076960"><span class="hs-identifier">x</span></a></a><span> </span><a name="local-6989586621679076961"><a href="#local-6989586621679076961"><span class="hs-identifier">xs</span></a></a><span> </span><a name="local-6989586621679076962"><a href="#local-6989586621679076962"><span class="hs-identifier">xxs</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">fmap</span><span> </span><span class="hs-identifier hs-var">Right</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">P</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">concat</span><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076960"><span class="hs-identifier hs-var">x</span></a><span class="hs-glyph">:</span><a href="#local-6989586621679076961"><span class="hs-identifier hs-var">xs</span></a><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-operator hs-var">++</span><span> </span><a href="Data.SwapList.html#contract"><span class="hs-identifier hs-var">contract</span></a><span> </span><a href="#local-6989586621679076962"><span class="hs-identifier hs-var">xxs</span></a><span>
+</span><a name="line-112"></a><span>  </span><span class="hs-identifier">contract</span><span> </span><span class="hs-special">(</span><a href="Data.SwapList.html#SwapEmpty"><span class="hs-identifier hs-var">SwapEmpty</span></a><span>         </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><a name="line-113"></a><span>
+</span><a name="line-114"></a><span class="hs-comment">-- | Expand a `SwapList` on the left</span><span>
+</span><a name="line-115"></a><span class="hs-identifier">leftExpand</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076991"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><a href="#local-6989586621679076991"><span class="hs-identifier hs-type">a</span></a><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-identifier hs-type">Either</span><span> </span><a href="#local-6989586621679076991"><span class="hs-identifier hs-type">a</span></a><span> </span><a href="#local-6989586621679076992"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><a href="#local-6989586621679076991"><span class="hs-identifier hs-type">a</span></a><span> </span><a href="#local-6989586621679076992"><span class="hs-identifier hs-type">b</span></a><span>
+</span><a name="line-116"></a><a name="leftExpand"><a href="Data.SwapList.html#leftExpand"><span class="hs-identifier">leftExpand</span></a></a><span>  </span><span class="hs-special">(</span><a name="local-6989586621679076998"><a href="#local-6989586621679076998"><span class="hs-identifier">y</span></a></a><span class="hs-special">,</span><span> </span><a name="local-6989586621679076999"><a href="#local-6989586621679076999"><span class="hs-identifier">ys</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">Left</span><span>  </span><a name="local-6989586621679077000"><a href="#local-6989586621679077000"><span class="hs-identifier">z</span></a></a><span class="hs-glyph">:</span><a name="local-6989586621679077001"><a href="#local-6989586621679077001"><span class="hs-identifier">zs</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="Data.SwapList.html#leftExpand"><span class="hs-identifier hs-var">leftExpand</span></a><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076998"><span class="hs-identifier hs-var">y</span></a><span class="hs-special">,</span><span> </span><a href="#local-6989586621679076999"><span class="hs-identifier hs-var">ys</span></a><span class="hs-operator hs-var">++</span><span class="hs-special">[</span><a href="#local-6989586621679077000"><span class="hs-identifier hs-var">z</span></a><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><a href="#local-6989586621679077001"><span class="hs-identifier hs-var">zs</span></a><span>
+</span><a name="line-117"></a><span class="hs-identifier">leftExpand</span><span>  </span><span class="hs-special">(</span><a name="local-6989586621679077002"><a href="#local-6989586621679077002"><span class="hs-identifier">y</span></a></a><span class="hs-special">,</span><span> </span><a name="local-6989586621679077003"><a href="#local-6989586621679077003"><span class="hs-identifier">ys</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">Right</span><span> </span><a name="local-6989586621679077004"><a href="#local-6989586621679077004"><span class="hs-identifier">z</span></a></a><span class="hs-glyph">:</span><a name="local-6989586621679077005"><a href="#local-6989586621679077005"><span class="hs-identifier">zs</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="Data.SwapList.html#SwapLeft"><span class="hs-identifier hs-var">SwapLeft</span></a><span>  </span><a href="#local-6989586621679077002"><span class="hs-identifier hs-var">y</span></a><span> </span><a href="#local-6989586621679077003"><span class="hs-identifier hs-var">ys</span></a><span> </span><span class="hs-special">(</span><a href="Data.SwapList.html#rightExpand"><span class="hs-identifier hs-var">rightExpand</span></a><span> </span><span class="hs-special">(</span><a href="#local-6989586621679077004"><span class="hs-identifier hs-var">z</span></a><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><a href="#local-6989586621679077005"><span class="hs-identifier hs-var">zs</span></a><span class="hs-special">)</span><span>
+</span><a name="line-118"></a><span class="hs-identifier">leftExpand</span><span>  </span><span class="hs-special">(</span><a name="local-6989586621679077006"><a href="#local-6989586621679077006"><span class="hs-identifier">y</span></a></a><span class="hs-special">,</span><span> </span><a name="local-6989586621679077007"><a href="#local-6989586621679077007"><span class="hs-identifier">ys</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span>      </span><span class="hs-identifier">_</span><span>   </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="Data.SwapList.html#SwapLeft"><span class="hs-identifier hs-var">SwapLeft</span></a><span>  </span><a href="#local-6989586621679077006"><span class="hs-identifier hs-var">y</span></a><span> </span><a href="#local-6989586621679077007"><span class="hs-identifier hs-var">ys</span></a><span> </span><a href="Data.SwapList.html#SwapEmpty"><span class="hs-identifier hs-var">SwapEmpty</span></a><span>
+</span><a name="line-119"></a><span>
+</span><a name="line-120"></a><span class="hs-comment">-- | Expand a `SwapList` on the right</span><span>
+</span><a name="line-121"></a><span class="hs-identifier">rightExpand</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><a href="#local-6989586621679076989"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><a href="#local-6989586621679076989"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-identifier hs-type">Either</span><span> </span><a href="#local-6989586621679076990"><span class="hs-identifier hs-type">a</span></a><span> </span><a href="#local-6989586621679076989"><span class="hs-identifier hs-type">b</span></a><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="Data.SwapList.html#SwapList"><span class="hs-identifier hs-type">SwapList</span></a><span> </span><a href="#local-6989586621679076990"><span class="hs-identifier hs-type">a</span></a><span> </span><a href="#local-6989586621679076989"><span class="hs-identifier hs-type">b</span></a><span>
+</span><a name="line-122"></a><a name="rightExpand"><a href="Data.SwapList.html#rightExpand"><span class="hs-identifier">rightExpand</span></a></a><span> </span><span class="hs-special">(</span><a name="local-6989586621679077008"><a href="#local-6989586621679077008"><span class="hs-identifier">y</span></a></a><span class="hs-special">,</span><span> </span><a name="local-6989586621679077009"><a href="#local-6989586621679077009"><span class="hs-identifier">ys</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">Left</span><span>  </span><a name="local-6989586621679077010"><a href="#local-6989586621679077010"><span class="hs-identifier">z</span></a></a><span class="hs-glyph">:</span><a name="local-6989586621679077011"><a href="#local-6989586621679077011"><span class="hs-identifier">zs</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="Data.SwapList.html#SwapRight"><span class="hs-identifier hs-var">SwapRight</span></a><span> </span><a href="#local-6989586621679077008"><span class="hs-identifier hs-var">y</span></a><span> </span><a href="#local-6989586621679077009"><span class="hs-identifier hs-var">ys</span></a><span> </span><span class="hs-special">(</span><a href="Data.SwapList.html#leftExpand"><span class="hs-identifier hs-var">leftExpand</span></a><span> </span><span class="hs-special">(</span><a href="#local-6989586621679077010"><span class="hs-identifier hs-var">z</span></a><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><a href="#local-6989586621679077011"><span class="hs-identifier hs-var">zs</span></a><span class="hs-special">)</span><span>
+</span><a name="line-123"></a><span class="hs-identifier">rightExpand</span><span> </span><span class="hs-special">(</span><a name="local-6989586621679077012"><a href="#local-6989586621679077012"><span class="hs-identifier">y</span></a></a><span class="hs-special">,</span><span> </span><a name="local-6989586621679077013"><a href="#local-6989586621679077013"><span class="hs-identifier">ys</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">Right</span><span> </span><a name="local-6989586621679077014"><a href="#local-6989586621679077014"><span class="hs-identifier">z</span></a></a><span class="hs-glyph">:</span><a name="local-6989586621679077015"><a href="#local-6989586621679077015"><span class="hs-identifier">zs</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="Data.SwapList.html#rightExpand"><span class="hs-identifier hs-var">rightExpand</span></a><span> </span><span class="hs-special">(</span><a href="#local-6989586621679077012"><span class="hs-identifier hs-var">y</span></a><span class="hs-special">,</span><span> </span><a href="#local-6989586621679077013"><span class="hs-identifier hs-var">ys</span></a><span class="hs-operator hs-var">++</span><span class="hs-special">[</span><a href="#local-6989586621679077014"><span class="hs-identifier hs-var">z</span></a><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><a href="#local-6989586621679077015"><span class="hs-identifier hs-var">zs</span></a><span>
+</span><a name="line-124"></a><span class="hs-identifier">rightExpand</span><span> </span><span class="hs-special">(</span><a name="local-6989586621679077016"><a href="#local-6989586621679077016"><span class="hs-identifier">y</span></a></a><span class="hs-special">,</span><span> </span><a name="local-6989586621679077017"><a href="#local-6989586621679077017"><span class="hs-identifier">ys</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span>      </span><span class="hs-identifier">_</span><span>   </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="Data.SwapList.html#SwapRight"><span class="hs-identifier hs-var">SwapRight</span></a><span> </span><a href="#local-6989586621679077016"><span class="hs-identifier hs-var">y</span></a><span> </span><a href="#local-6989586621679077017"><span class="hs-identifier hs-var">ys</span></a><span> </span><a href="Data.SwapList.html#SwapEmpty"><span class="hs-identifier hs-var">SwapEmpty</span></a><span>
+</span><a name="line-125"></a><span>
+</span><a name="line-126"></a><span>
+</span><a name="line-127"></a><span>
+</span><a name="line-128"></a><span>
+</span><a name="line-129"></a><span class="hs-comment">-- | One way of thinking about this is distributing a partition on the image of a functor @(C -&gt; D)@ over the functor to get a new functor from C to the partitions.</span><span>
+</span><a name="line-130"></a><span class="hs-comment">--</span><span>
+</span><a name="line-131"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-132"></a><span class="hs-comment">--  Functor f =&gt; (f a -&gt; partition (f a)) -&gt; f (partition a) -&gt; partition (f a)</span><span>
+</span><a name="line-133"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-134"></a><span class="hs-comment">--</span><span>
+</span><a name="line-135"></a><span class="hs-comment">-- OR we have a language formed along some scaffolding structure, for example a list, binary tree, etc.</span><span>
+</span><a name="line-136"></a><span class="hs-comment">-- We also have a partition of the language on its own.</span><span>
+</span><a name="line-137"></a><span class="hs-comment">-- We then want to map an arbitrary expression to a new, unique scaffolding structure,</span><span>
+</span><a name="line-138"></a><span class="hs-comment">-- where adjacent language terms within the scaffolding never are within the same equivalence classes within the language.</span><span>
+</span><a name="line-139"></a><span class="hs-comment">--</span><span>
+</span><a name="line-140"></a><span class="hs-comment">-- For example, if our partition is @(isLeft)@ and our scaffolding structure is a list then the new scaffolding is formed like so:</span><span>
+</span><a name="line-141"></a><span class="hs-comment">--</span><span>
+</span><a name="line-142"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-143"></a><span class="hs-comment">--  [Either a b] -&gt; Maybe (Either (Others a b) (Others b a))</span><span>
+</span><a name="line-144"></a><span class="hs-comment">--  Others x y = (x, Maybe (Others y x))</span><span>
+</span><a name="line-145"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-146"></a><span class="hs-comment">--</span><span>
+</span><a name="line-147"></a><span class="hs-identifier">introductionNotes</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-148"></a><a name="introductionNotes"><a href="Data.SwapList.html#introductionNotes"><span class="hs-identifier">introductionNotes</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-149"></a><span>
+</span><a name="line-150"></a><span>
+</span><a name="line-151"></a><span class="hs-comment">-- | Factorization of languages</span><span>
+</span><a name="line-152"></a><span class="hs-comment">--</span><span>
+</span><a name="line-153"></a><span class="hs-comment">-- These are effectively factorizations of languages, as we move from a language built on scaffolding to a language of homogenous sublanguages built on two layers of scaffolding:</span><span>
+</span><a name="line-154"></a><span class="hs-comment">--</span><span>
+</span><a name="line-155"></a><span class="hs-comment">--    the original layer, that holds up the individual sublanguage of its slice of the partition</span><span>
+</span><a name="line-156"></a><span class="hs-comment">--    a layer, at least as constrained (likely smaller), that holds up the original layer</span><span>
+</span><a name="line-157"></a><span class="hs-comment">--</span><span>
+</span><a name="line-158"></a><span class="hs-comment">-- That is, this is a factorization of the scaffolding layers along a partition of the base language.</span><span>
+</span><a name="line-159"></a><span class="hs-comment">--</span><span>
+</span><a name="line-160"></a><span class="hs-comment">-- If the splitting has nice properties, we may be able to show that there isn't any overlap between the two layers and so we can lift solutions on each to the total using some sort of disjoint (xor) sum.</span><span>
+</span><a name="line-161"></a><span class="hs-comment">--</span><span>
+</span><a name="line-162"></a><span class="hs-comment">-- This would allow type-solving to be split up between the languages, allowing study of each language to be immediately lifted to the study of both.</span><span>
+</span><a name="line-163"></a><span class="hs-comment">--</span><span>
+</span><a name="line-164"></a><span class="hs-comment">-- Which is exactly what we want: nice liftings between the languages and localized addition/removal of features.</span><span>
+</span><a name="line-165"></a><span class="hs-comment">--</span><span>
+</span><a name="line-166"></a><span class="hs-comment">--</span><span>
+</span><a name="line-167"></a><span class="hs-comment">-- One may define a structural fold, for example:</span><span>
+</span><a name="line-168"></a><span class="hs-comment">--</span><span>
+</span><a name="line-169"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-170"></a><span class="hs-comment">--  fold (x : ys) = fold_: x ys</span><span>
+</span><a name="line-171"></a><span class="hs-comment">--  fold []       = fold_[]</span><span>
+</span><a name="line-172"></a><span class="hs-comment">--</span><span>
+</span><a name="line-173"></a><span class="hs-comment">--  data Expr a where</span><span>
+</span><a name="line-174"></a><span class="hs-comment">--    App :: Expr a -&gt; Expr a -&gt; Expr a</span><span>
+</span><a name="line-175"></a><span class="hs-comment">--    Lit :: a</span><span>
+</span><a name="line-176"></a><span class="hs-comment">--</span><span>
+</span><a name="line-177"></a><span class="hs-comment">--  fold (App x y) = fold_App x y</span><span>
+</span><a name="line-178"></a><span class="hs-comment">--  fold (Lit x  ) = fold_Lit x</span><span>
+</span><a name="line-179"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-180"></a><span class="hs-comment">--</span><span>
+</span><a name="line-181"></a><span class="hs-comment">-- We then define a set of subterms to be adjacent iff there exists some GADT term of the form:</span><span>
+</span><a name="line-182"></a><span class="hs-comment">--</span><span>
+</span><a name="line-183"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-184"></a><span class="hs-comment">--  GADTerm :: subterm1 -&gt; subterm2 -&gt; subterm3 -&gt; ... -&gt; Expr</span><span>
+</span><a name="line-185"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-186"></a><span class="hs-comment">--</span><span>
+</span><a name="line-187"></a><span class="hs-comment">-- Thus, we have that valid partitions are</span><span>
+</span><a name="line-188"></a><span class="hs-comment">--</span><span>
+</span><a name="line-189"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-190"></a><span class="hs-comment">--  let G be the graph formed by mapping adjacent sets to complete subgraphs</span><span>
+</span><a name="line-191"></a><span class="hs-comment">--  the partition forms a valid coloring of the resulting graph</span><span>
+</span><a name="line-192"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-193"></a><span class="hs-comment">--</span><span>
+</span><a name="line-194"></a><span class="hs-comment">-- Question: Is a partition on an expression valid iff it is a valid coloring of that graph? YES.</span><span>
+</span><a name="line-195"></a><span class="hs-comment">--</span><span>
+</span><a name="line-196"></a><span class="hs-comment">--</span><span>
+</span><a name="line-197"></a><span class="hs-comment">-- We thus have: iif the partition forms a valid coloring of every graph formed from an expression by connecting every vertex in a set of adjacent terms (GADT-wise) to every other in the set.</span><span>
+</span><a name="line-198"></a><span class="hs-comment">--</span><span>
+</span><a name="line-199"></a><span class="hs-comment">-- The partition can be uniquely distributed into the terms of the language over some scaffolding structure (the language formed by joining adjacent and equal-kinded terms recursively)</span><span>
+</span><a name="line-200"></a><span class="hs-comment">--</span><span>
+</span><a name="line-201"></a><span class="hs-comment">-- We might want to define a &quot;regular&quot; or &quot;homogenous&quot; partition, one that partitions according to leaf-GADT terms?</span><span>
+</span><a name="line-202"></a><span class="hs-comment">--</span><span>
+</span><a name="line-203"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-204"></a><span class="hs-comment">--        e.g. isLeft partitions over the GADT terms, Left _ -&gt; set1, Right _ -&gt; set2</span><span>
+</span><a name="line-205"></a><span class="hs-comment">--        these seem more trivial, then it seems that we can do it iff no GADT-term is adjacent to itself? Mmmm, or adjacent to itself in an ambiguous way?</span><span>
+</span><a name="line-206"></a><span class="hs-comment">--        Hmmm.. it seems that we can make it work if we have an unambiguous and correct way to squash/fold adjacent terms..</span><span>
+</span><a name="line-207"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-208"></a><span class="hs-comment">--</span><span>
+</span><a name="line-209"></a><span class="hs-identifier">factorizationOfLanguages</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-210"></a><a name="factorizationOfLanguages"><a href="Data.SwapList.html#factorizationOfLanguages"><span class="hs-identifier">factorizationOfLanguages</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-211"></a><span>
+</span><a name="line-212"></a><span>
+</span><a name="line-213"></a><span>
+</span><a name="line-214"></a><span class="hs-comment">-- | What do we have?</span><span>
+</span><a name="line-215"></a><span class="hs-comment">--</span><span>
+</span><a name="line-216"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-217"></a><span class="hs-comment">--  We have some functor f from C -&gt; D.</span><span>
+</span><a name="line-218"></a><span class="hs-comment">--  We have a binary relation on members of D (f a) that forms an undirected graph called isAdjacent.(?)</span><span>
+</span><a name="line-219"></a><span class="hs-comment">--  We have a partition on members of C (a)</span><span>
+</span><a name="line-220"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-221"></a><span class="hs-comment">--</span><span>
+</span><a name="line-222"></a><span class="hs-comment">-- With these together, we have that there is a unique way of mapping adjacent members of D with the same partition of C to a single member of `f (f a)`?</span><span>
+</span><a name="line-223"></a><span class="hs-comment">-- (Such that we get a new structure where the structure of the adjacent members is pushed out into the &quot;leaves&quot;.)</span><span>
+</span><a name="line-224"></a><span class="hs-comment">--</span><span>
+</span><a name="line-225"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-226"></a><span class="hs-comment">--  Functor f</span><span>
+</span><a name="line-227"></a><span class="hs-comment">--  fmap :: (a -&gt; b) -&gt; f a -&gt; f b</span><span>
+</span><a name="line-228"></a><span class="hs-comment">--  (a -&gt; Partition)</span><span>
+</span><a name="line-229"></a><span class="hs-comment">--  fmap (a -&gt; Partition) -&gt; f a -&gt; f Partition</span><span>
+</span><a name="line-230"></a><span class="hs-comment">--  f a -&gt; g (f a), where</span><span>
+</span><a name="line-231"></a><span class="hs-comment">--   part :: a -&gt; Partition</span><span>
+</span><a name="line-232"></a><span class="hs-comment">--   unique :: Eq a =&gt; f a -&gt; Maybe a :: if all the elements are equal, return just that element else nothing</span><span>
+</span><a name="line-233"></a><span class="hs-comment">--   fmap part :: f a -&gt; f Partition</span><span>
+</span><a name="line-234"></a><span class="hs-comment">--   unique . fmap part :: f a -&gt; Maybe a</span><span>
+</span><a name="line-235"></a><span class="hs-comment">--   mapM (unique . fmap part) :: g (f a) -&gt; Maybe (g a)</span><span>
+</span><a name="line-236"></a><span class="hs-comment">--   isJust (mapM (unique . fmap part)) :: g (f a) -&gt; Bool</span><span>
+</span><a name="line-237"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-238"></a><span class="hs-comment">--</span><span>
+</span><a name="line-239"></a><span class="hs-identifier">quickRecap</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-240"></a><a name="quickRecap"><a href="Data.SwapList.html#quickRecap"><span class="hs-identifier">quickRecap</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-241"></a><span>
+</span><a name="line-242"></a><span>
+</span><a name="line-243"></a><span class="hs-comment">-- | Hmmm.. we seem to have three parts:</span><span>
+</span><a name="line-244"></a><span class="hs-comment">--</span><span>
+</span><a name="line-245"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-246"></a><span class="hs-comment">--  How do we specify the adjacency on the structure?</span><span>
+</span><a name="line-247"></a><span class="hs-comment">--  How do we specify the partition on the values?</span><span>
+</span><a name="line-248"></a><span class="hs-comment">--  How do we specify that we can join connected collections of adjacent values with the same partition? (join into the structure)</span><span>
+</span><a name="line-249"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-250"></a><span class="hs-comment">--</span><span>
+</span><a name="line-251"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-252"></a><span class="hs-comment">--  structure values</span><span>
+</span><a name="line-253"></a><span class="hs-comment">--  part :: values -&gt; Partition</span><span>
+</span><a name="line-254"></a><span class="hs-comment">--  adjacent :: value in structure -&gt; value in structure -&gt; Bool</span><span>
+</span><a name="line-255"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-256"></a><span class="hs-comment">--</span><span>
+</span><a name="line-257"></a><span class="hs-comment">-- Mmmmm, we don't really care what the adjacency relation is,</span><span>
+</span><a name="line-258"></a><span class="hs-comment">-- we only care that we have a partition on the structure such that we can group values together along that partition.</span><span>
+</span><a name="line-259"></a><span class="hs-comment">--</span><span>
+</span><a name="line-260"></a><span class="hs-comment">-- What do we mean by group together?</span><span>
+</span><a name="line-261"></a><span class="hs-comment">-- Well, we'd like a unique and consistent bijection betwwen: @f a &lt;-&gt; f (f a)@ such that all of the @a@'s in any substructure @(f a)@ belong to the same partition.</span><span>
+</span><a name="line-262"></a><span class="hs-comment">--</span><span>
+</span><a name="line-263"></a><span class="hs-comment">-- A partition is just an injective function.</span><span>
+</span><a name="line-264"></a><span class="hs-comment">-- So we want @(f a -&gt; whichPartition)@ for the inner layer.</span><span>
+</span><a name="line-265"></a><span class="hs-comment">--</span><span>
+</span><a name="line-266"></a><span class="hs-comment">-- @(f a -&gt; whichPartition)@ is the @function :: (p :: a -&gt; b) -&gt; (f a | singleton . toSet . fmap p) -&gt; b@</span><span>
+</span><a name="line-267"></a><span class="hs-comment">--</span><span>
+</span><a name="line-268"></a><span class="hs-comment">-- Mmmm or really do we want:</span><span>
+</span><a name="line-269"></a><span class="hs-comment">--</span><span>
+</span><a name="line-270"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-271"></a><span class="hs-comment">--  f a -&gt; f (g a) -&gt; (g a -&gt; f a) -&gt; f (f a)</span><span>
+</span><a name="line-272"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-273"></a><span class="hs-comment">--</span><span>
+</span><a name="line-274"></a><span class="hs-identifier">threePartsOfSpecification</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-275"></a><a name="threePartsOfSpecification"><a href="Data.SwapList.html#threePartsOfSpecification"><span class="hs-identifier">threePartsOfSpecification</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-276"></a><span>
+</span><a name="line-277"></a><span class="hs-comment">-- | Ok, we have some structure and some structure preserving bijection that pushes as much of the structure inside the object structure?</span><span>
+</span><a name="line-278"></a><span class="hs-comment">--</span><span>
+</span><a name="line-279"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-280"></a><span class="hs-comment">--  f (g a) &lt;-&gt; f (g (f a))</span><span>
+</span><a name="line-281"></a><span class="hs-comment">--    T a =&gt; [T a] -&gt; T [a]</span><span>
+</span><a name="line-282"></a><span class="hs-comment">--    T a b =&gt; [T a b] -&gt; T [a] [b]</span><span>
+</span><a name="line-283"></a><span class="hs-comment">--    T a | U b =&gt; [T a b] -&gt; [T [a] | U [b]]</span><span>
+</span><a name="line-284"></a><span class="hs-comment">--    (a -&gt; b) =&gt; [a -&gt; b] -&gt; [a -&gt; [b] | [a] -&gt; b]</span><span>
+</span><a name="line-285"></a><span class="hs-comment">--    (a , b)  =&gt; Tree (a, b) -&gt; Tree (Tree a, Tree b)</span><span>
+</span><a name="line-286"></a><span class="hs-comment">--    (a | b)  =&gt; Tree (a | b) -&gt; Tree (Tree a | Tree b)</span><span>
+</span><a name="line-287"></a><span class="hs-comment">--    (a -&gt; b) =&gt; Tree (a -&gt; b) -&gt; Tree (a -&gt; Tree b | Tree a -&gt; b)</span><span>
+</span><a name="line-288"></a><span class="hs-comment">--    a? =&gt; Tree a? -&gt; Tree (Tree a)?</span><span>
+</span><a name="line-289"></a><span class="hs-comment">--      a? = a | _|_ = (?) a</span><span>
+</span><a name="line-290"></a><span class="hs-comment">--    [a] =&gt; Tree [a] -&gt; Tree (Tree _|_ | Tree a | Tree (a, [x]) | Tree [x, a] | Tree [..])</span><span>
+</span><a name="line-291"></a><span class="hs-comment">--    ([a] = (:) a [a] :: [a] | [] :: [a]) =&gt; Tree [a] -&gt; Tree [Tree a]</span><span>
+</span><a name="line-292"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-293"></a><span class="hs-comment">--</span><span>
+</span><a name="line-294"></a><span class="hs-identifier">structurePreservingBijection</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-295"></a><a name="structurePreservingBijection"><a href="Data.SwapList.html#structurePreservingBijection"><span class="hs-identifier">structurePreservingBijection</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-296"></a><span>
+</span><a name="line-297"></a><span>
+</span><a name="line-298"></a><span class="hs-comment">-- | What are some valid partitions of some datatypes?</span><span>
+</span><a name="line-299"></a><span class="hs-comment">--</span><span>
+</span><a name="line-300"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-301"></a><span class="hs-comment">--  f (a) -&gt; (f a)</span><span>
+</span><a name="line-302"></a><span class="hs-comment">--  f (a, b) -&gt; (f a, f b) | (a, f b) | (f a, b)</span><span>
+</span><a name="line-303"></a><span class="hs-comment">--</span><span>
+</span><a name="line-304"></a><span class="hs-comment">--  f (a1, b1) (a2, b2) &amp;&amp; a1 ~ b1 &amp;&amp; a2 ~ b2 =&gt; (f a1 a2, f b1 b2)</span><span>
+</span><a name="line-305"></a><span class="hs-comment">--  f (a1, b1) (a2, b2) &amp;&amp; a1 ~ a2 =&gt; (a1, f b1 b2)</span><span>
+</span><a name="line-306"></a><span class="hs-comment">--  f (a1, b1) (a2, b2) &amp;&amp; b1 ~ b2 =&gt; (f a1 a2, b2)</span><span>
+</span><a name="line-307"></a><span class="hs-comment">--</span><span>
+</span><a name="line-308"></a><span class="hs-comment">--  f (g a1) (g a2) | a1 ~ a2 =&gt; g (f a1 a2)</span><span>
+</span><a name="line-309"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-310"></a><span class="hs-comment">--</span><span>
+</span><a name="line-311"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-312"></a><span class="hs-comment">--  fp :: t -&gt; t -&gt; Maybe t</span><span>
+</span><a name="line-313"></a><span class="hs-comment">--</span><span>
+</span><a name="line-314"></a><span class="hs-comment">--  f (g a1 b1) (g a2 b2) | fp a1 a2 &amp;&amp; fp b1 b2 =&gt; g (fp a1 a2 ::   a) (fp b1 b2 ::   b)</span><span>
+</span><a name="line-315"></a><span class="hs-comment">--  f (g a1 b1) (g a2 b2) | fp a1 a2             =&gt; g (fp a1 a2 ::   a) (f  b1 b2 :: f b)</span><span>
+</span><a name="line-316"></a><span class="hs-comment">--  f (g a1 b1) (g a2 b2) |             fp b1 b2 =&gt; g (f  a1 a2 :: f a) (fp b1 b2 ::   b)</span><span>
+</span><a name="line-317"></a><span class="hs-comment">--  f (g a1 b1) (g a2 b2) |                      =&gt; f (f  a1 a2 :: f a) (f  b1 b2 :: f b)</span><span>
+</span><a name="line-318"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-319"></a><span class="hs-comment">--</span><span>
+</span><a name="line-320"></a><span class="hs-comment">-- What are we doing here? zipping the following function:</span><span>
+</span><a name="line-321"></a><span class="hs-comment">--</span><span>
+</span><a name="line-322"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-323"></a><span class="hs-comment">-- If fp a1 a2 (we can join a1 and a2) then fp a1 a2 else f b1 b2</span><span>
+</span><a name="line-324"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-325"></a><span class="hs-comment">--</span><span>
+</span><a name="line-326"></a><span class="hs-comment">-- We must be able to do the following:</span><span>
+</span><a name="line-327"></a><span class="hs-comment">--</span><span>
+</span><a name="line-328"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-329"></a><span class="hs-comment">--  (a1 -&gt; a2 -&gt; a3) -&gt; (b1 -&gt; b2 -&gt; b3) -&gt; g a1 b1 -&gt; g a2 b2 -&gt; g a3 b3</span><span>
+</span><a name="line-330"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-331"></a><span class="hs-comment">--</span><span>
+</span><a name="line-332"></a><span class="hs-comment">-- We must also be able to tell which of the zippings apply.</span><span>
+</span><a name="line-333"></a><span class="hs-comment">--</span><span>
+</span><a name="line-334"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-335"></a><span class="hs-comment">--        (a1 -&gt; a2 -&gt; Either a3 (fa a1 a2)) -&gt; (b1 -&gt; b2 -&gt; Either b3 (fb b1 b2)) -&gt; g a1 b1 -&gt; g a2 b2 -&gt; g a3 b3 | g a3 (fb b1 b2) | g (fa a1 a2) b3 | g (fa a1 a2) (fb b1 b2)</span><span>
+</span><a name="line-336"></a><span class="hs-comment">--        c :: fa a -&gt; fb b -&gt; .. -&gt; fz z -&gt; c a b .. z</span><span>
+</span><a name="line-337"></a><span class="hs-comment">--        c :: fa a1 -&gt; fa a2 -&gt; c a1 a2</span><span>
+</span><a name="line-338"></a><span class="hs-comment">--        Left  :: a -&gt; Either a b</span><span>
+</span><a name="line-339"></a><span class="hs-comment">--        Right :: b -&gt; Either a b</span><span>
+</span><a name="line-340"></a><span class="hs-comment">--        fa :: a -&gt; a -&gt; f a</span><span>
+</span><a name="line-341"></a><span class="hs-comment">--        fb :: b -&gt; b -&gt; f b</span><span>
+</span><a name="line-342"></a><span class="hs-comment">--        f :: forall t. t -&gt; t -&gt; f t</span><span>
+</span><a name="line-343"></a><span class="hs-comment">--        _ :: (a -&gt; a -&gt; Either a (f a)) -&gt; (b -&gt; b -&gt; Either b (f b)) -&gt; Either a b -&gt; Either a b -&gt; Either a b | Either a (f b) | Either (f a) b | f (Either a b)</span><span>
+</span><a name="line-344"></a><span class="hs-comment">--        _ g h (F (Left  x) (Left  y)) = Left  (g x y)</span><span>
+</span><a name="line-345"></a><span class="hs-comment">--        _ g h (F (Right x) (Right y)) = Right (h x y)</span><span>
+</span><a name="line-346"></a><span class="hs-comment">--        _ g h (F        x         y ) = F x y</span><span>
+</span><a name="line-347"></a><span class="hs-comment">--        (a1 -&gt; a2 -&gt; Either a3 (c fa a1 -&gt; fa a2 -&gt;</span><span>
+</span><a name="line-348"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-349"></a><span class="hs-comment">--</span><span>
+</span><a name="line-350"></a><span class="hs-identifier">someValidPartitions</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-351"></a><a name="someValidPartitions"><a href="Data.SwapList.html#someValidPartitions"><span class="hs-identifier">someValidPartitions</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-352"></a><span>
+</span><a name="line-353"></a><span>
+</span><a name="line-354"></a><span class="hs-comment">-- | Misc. notes:</span><span>
+</span><a name="line-355"></a><span class="hs-comment">--</span><span>
+</span><a name="line-356"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-357"></a><span class="hs-comment">--  [(1, 2), (1, 2)] =&gt; ([1, 1], [2, 2])</span><span>
+</span><a name="line-358"></a><span class="hs-comment">--  [(1, 2), (1, 3)] =&gt; (1, [2, 3])</span><span>
+</span><a name="line-359"></a><span class="hs-comment">--  [(1, 3), (2, 3)] =&gt; ([1, 2], 3)</span><span>
+</span><a name="line-360"></a><span class="hs-comment">--  [(1, 2), (3, 4)] =&gt; ([1, 3], [2, 4])</span><span>
+</span><a name="line-361"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-362"></a><span class="hs-comment">--</span><span>
+</span><a name="line-363"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-364"></a><span class="hs-comment">--  f (a | b) -&gt; f a | f b</span><span>
+</span><a name="line-365"></a><span class="hs-comment">--  f (a | (a, b)) -&gt; f a | (f a, f b) | (a, f b) | (f a, b)</span><span>
+</span><a name="line-366"></a><span class="hs-comment">--  f (a, b, c | d) -&gt; (a, b, f c) |</span><span>
+</span><a name="line-367"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-368"></a><span class="hs-comment">--</span><span>
+</span><a name="line-369"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-370"></a><span class="hs-comment">--  f (g a) &lt;-&gt; f (f (g a)), f (f (g a)) &lt;-&gt; f (g (f a))</span><span>
+</span><a name="line-371"></a><span class="hs-comment">--  f . g &lt;-&gt; f . f . g &lt;-&gt; f . g . f</span><span>
+</span><a name="line-372"></a><span class="hs-comment">--    duplicate    :: Comonad f =&gt; f (g a) -&gt; f (f (g a))</span><span>
+</span><a name="line-373"></a><span class="hs-comment">--</span><span>
+</span><a name="line-374"></a><span class="hs-comment">--    extract      :: Comonad f =&gt; f (f (g a)) -&gt; f (g a)</span><span>
+</span><a name="line-375"></a><span class="hs-comment">--    fmap extract :: Comonad f =&gt; f (f (g a)) -&gt; f (g a)</span><span>
+</span><a name="line-376"></a><span class="hs-comment">--</span><span>
+</span><a name="line-377"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-378"></a><span class="hs-comment">--</span><span>
+</span><a name="line-379"></a><span class="hs-identifier">someValidPartitionsNotes</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-380"></a><a name="someValidPartitionsNotes"><a href="Data.SwapList.html#someValidPartitionsNotes"><span class="hs-identifier">someValidPartitionsNotes</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-381"></a><span>
+</span><a name="line-382"></a><span>
+</span><a name="line-383"></a><span class="hs-comment">-- | If @f@ is a comonad then we have:</span><span>
+</span><a name="line-384"></a><span class="hs-comment">--</span><span>
+</span><a name="line-385"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-386"></a><span class="hs-comment">--  iso duplicate extract :: f (g a) &lt;-&gt; f (f (g a))</span><span>
+</span><a name="line-387"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-388"></a><span class="hs-comment">--</span><span>
+</span><a name="line-389"></a><span class="hs-comment">-- Suppose f is not a comonad, then do we have duplicate and extract?</span><span>
+</span><a name="line-390"></a><span class="hs-comment">--</span><span>
+</span><a name="line-391"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-392"></a><span class="hs-comment">--  qa      :: f (g a)     -&gt; f (f (g a))</span><span>
+</span><a name="line-393"></a><span class="hs-comment">--  qb      :: f (f (g a)) -&gt; f (g a)</span><span>
+</span><a name="line-394"></a><span class="hs-comment">--  qc      :: f (f (g a)) -&gt; f (g (f a))</span><span>
+</span><a name="line-395"></a><span class="hs-comment">--  qd      :: f (g (f a)) -&gt; f (f (g a))</span><span>
+</span><a name="line-396"></a><span class="hs-comment">--  qc . qa :: f (g a)     -&gt; f (g (f a))</span><span>
+</span><a name="line-397"></a><span class="hs-comment">--  qb . qd :: f (g (f a)) -&gt; f (g a)</span><span>
+</span><a name="line-398"></a><span class="hs-comment">--  qa . qb = id</span><span>
+</span><a name="line-399"></a><span class="hs-comment">--  qb . qa = id</span><span>
+</span><a name="line-400"></a><span class="hs-comment">--  qc . qd = id</span><span>
+</span><a name="line-401"></a><span class="hs-comment">--  qd . qc = id</span><span>
+</span><a name="line-402"></a><span class="hs-comment">--</span><span>
+</span><a name="line-403"></a><span class="hs-comment">--  f . g     = f . f . g</span><span>
+</span><a name="line-404"></a><span class="hs-comment">--  f . f . g = f . g . f</span><span>
+</span><a name="line-405"></a><span class="hs-comment">--  f . g     = f . g . f</span><span>
+</span><a name="line-406"></a><span class="hs-comment">--</span><span>
+</span><a name="line-407"></a><span class="hs-comment">--  (f . g) . f = (f . g . f) . f</span><span>
+</span><a name="line-408"></a><span class="hs-comment">--  qa      :: f . g     = f . f . g</span><span>
+</span><a name="line-409"></a><span class="hs-comment">--  qc      :: f . f . g -&gt; f . g . f</span><span>
+</span><a name="line-410"></a><span class="hs-comment">--  qd      :: f (g (f a)) -&gt; f (f (g a))</span><span>
+</span><a name="line-411"></a><span class="hs-comment">--  qc . qa :: f (g a)     -&gt; f (g (f a))</span><span>
+</span><a name="line-412"></a><span class="hs-comment">--  qb . qd :: f (g (f a)) -&gt; f (g a)</span><span>
+</span><a name="line-413"></a><span class="hs-comment">--</span><span>
+</span><a name="line-414"></a><span class="hs-comment">--</span><span>
+</span><a name="line-415"></a><span class="hs-comment">-- Note 1: we don't have any way to derive a function of the type: (f a -&gt; a)</span><span>
+</span><a name="line-416"></a><span class="hs-comment">--  so we know that we can't get (Comonad f) for free</span><span>
+</span><a name="line-417"></a><span class="hs-comment">--</span><span>
+</span><a name="line-418"></a><span class="hs-comment">-- Note 2: we don't have any way to derive a function of the type: (g a -&gt; a)</span><span>
+</span><a name="line-419"></a><span class="hs-comment">--  so we know that we can't get (Comonad g) for free</span><span>
+</span><a name="line-420"></a><span class="hs-comment">--</span><span>
+</span><a name="line-421"></a><span class="hs-comment">-- Note 3: we don't have any way to derive a function of the type: (a -&gt; _)</span><span>
+</span><a name="line-422"></a><span class="hs-comment">--  so we know that we can't get Monad f, Monad g, Monad (f . g), Monad (g . f), etc for free</span><span>
+</span><a name="line-423"></a><span class="hs-comment">--</span><span>
+</span><a name="line-424"></a><span class="hs-comment">--  (f (g a) -&gt; f (f (g a))) -&gt; (f a -&gt; f (f a))</span><span>
+</span><a name="line-425"></a><span class="hs-comment">--    wa :: f a -&gt; f (g a)</span><span>
+</span><a name="line-426"></a><span class="hs-comment">--    wb :: f (f (g a)) -&gt; f (f a)</span><span>
+</span><a name="line-427"></a><span class="hs-comment">--  (f (f (g a)) -&gt; f (g a)) -&gt; (f a -&gt; a)</span><span>
+</span><a name="line-428"></a><span class="hs-comment">--    wc :: f a -&gt; f (f (g a))</span><span>
+</span><a name="line-429"></a><span class="hs-comment">--    wd :: f (g a) -&gt; a</span><span>
+</span><a name="line-430"></a><span class="hs-comment">--</span><span>
+</span><a name="line-431"></a><span class="hs-comment">--  wd . wa :: f a -&gt; a</span><span>
+</span><a name="line-432"></a><span class="hs-comment">--  wb . wc :: f a -&gt; f (f a)</span><span>
+</span><a name="line-433"></a><span class="hs-comment">--  With both:</span><span>
+</span><a name="line-434"></a><span class="hs-comment">--    (f (g a) -&gt; a) . (f a -&gt; f (g a)) = f a -&gt; a</span><span>
+</span><a name="line-435"></a><span class="hs-comment">--</span><span>
+</span><a name="line-436"></a><span class="hs-comment">--  qq :: f (g a)     -&gt; f (f (g a))</span><span>
+</span><a name="line-437"></a><span class="hs-comment">--  ww :: f (f (g a)) -&gt; f (g a)</span><span>
+</span><a name="line-438"></a><span class="hs-comment">--  qq . ww = id</span><span>
+</span><a name="line-439"></a><span class="hs-comment">--  ww . qq = id</span><span>
+</span><a name="line-440"></a><span class="hs-comment">--</span><span>
+</span><a name="line-441"></a><span class="hs-comment">--  ww = extract = fmap extract</span><span>
+</span><a name="line-442"></a><span class="hs-comment">--  qq = duplicate</span><span>
+</span><a name="line-443"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-444"></a><span class="hs-comment">--</span><span>
+</span><a name="line-445"></a><span class="hs-comment">-- Ff this is the case, then I believe that it implies @(g a &lt;-&gt; a)@.</span><span>
+</span><a name="line-446"></a><span class="hs-comment">--</span><span>
+</span><a name="line-447"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-448"></a><span class="hs-comment">--  extract   :: f a -&gt; a</span><span>
+</span><a name="line-449"></a><span class="hs-comment">--  duplicate :: f a -&gt; f (f a)</span><span>
+</span><a name="line-450"></a><span class="hs-comment">--  duplicate .      extract = id</span><span>
+</span><a name="line-451"></a><span class="hs-comment">--  duplicate . fmap extract = id</span><span>
+</span><a name="line-452"></a><span class="hs-comment">--</span><span>
+</span><a name="line-453"></a><span class="hs-comment">--  fmap distribute :: Functor     f, Distributive g =&gt; f (f (g a)) -&gt; f (g (f a))</span><span>
+</span><a name="line-454"></a><span class="hs-comment">--  fmap sequenceA  :: Traversable f, Applicative  g =&gt; f (f (g a)) -&gt; f (g (f a))</span><span>
+</span><a name="line-455"></a><span class="hs-comment">--</span><span>
+</span><a name="line-456"></a><span class="hs-comment">--  fmap distribute :: Distributive f, Functor     g =&gt; f (g (f a)) -&gt; f (f (g a))</span><span>
+</span><a name="line-457"></a><span class="hs-comment">--  fmap sequenceA  :: Applicative  f, Traversable g =&gt; f (g (f a)) -&gt; f (f (g a))</span><span>
+</span><a name="line-458"></a><span class="hs-comment">--</span><span>
+</span><a name="line-459"></a><span class="hs-comment">--  Functor f, Functor g</span><span>
+</span><a name="line-460"></a><span class="hs-comment">--   Comonad f</span><span>
+</span><a name="line-461"></a><span class="hs-comment">--     Distributive f, Distributive g</span><span>
+</span><a name="line-462"></a><span class="hs-comment">--     Distributive f, Traversable  f, Applicative g</span><span>
+</span><a name="line-463"></a><span class="hs-comment">--     Applicative  f, Traversable  g, Distributive g</span><span>
+</span><a name="line-464"></a><span class="hs-comment">--     Applicative  f, Traversable  g, Traversable f, Applicative g</span><span>
+</span><a name="line-465"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-466"></a><span class="hs-comment">--</span><span>
+</span><a name="line-467"></a><span class="hs-identifier">comonadComparison</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-468"></a><a name="comonadComparison"><a href="Data.SwapList.html#comonadComparison"><span class="hs-identifier">comonadComparison</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-469"></a><span>
+</span><a name="line-470"></a><span>
+</span><a name="line-471"></a><span class="hs-comment">-- | Series join points:</span><span>
+</span><a name="line-472"></a><span class="hs-comment">--</span><span>
+</span><a name="line-473"></a><span class="hs-comment">-- Here's the idea: We take a list (series) of some datatype @t@ and we replace it with a list of @t (_)@,</span><span>
+</span><a name="line-474"></a><span class="hs-comment">-- such that consecutive elements of the same form (e.g. @Left x, Left y || Right x, Right y || (x, y), (z, w)@)</span><span>
+</span><a name="line-475"></a><span class="hs-comment">-- are joined together along equivalences and the list pops out within the parameter (e.g. @[(a, b1), (a, b2)] -&gt; (a, [b1,b2])@).</span><span>
+</span><a name="line-476"></a><span class="hs-comment">--</span><span>
+</span><a name="line-477"></a><span class="hs-comment">-- What's required for this to be a unique construction is for the structures to be partitioned by their &quot;join points&quot;.</span><span>
+</span><a name="line-478"></a><span class="hs-comment">--</span><span>
+</span><a name="line-479"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-480"></a><span class="hs-comment">--  Left (_ :: a), Right (_ :: b) -&gt; Left (_ :: [a]), Right (_ :: [b])</span><span>
+</span><a name="line-481"></a><span class="hs-comment">--  (_ :: a, _ :: b) -&gt; (_ :: a, _ :: b)</span><span>
+</span><a name="line-482"></a><span class="hs-comment">--  Nothing, Just (_ :: a) -&gt; Nothing, Just [a]</span><span>
+</span><a name="line-483"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-484"></a><span class="hs-comment">--</span><span>
+</span><a name="line-485"></a><span class="hs-comment">-- Ahh, for it to be unique, each pair must map to either zero (don't match) or one (do match) possible combinations.</span><span>
+</span><a name="line-486"></a><span class="hs-comment">--</span><span>
+</span><a name="line-487"></a><span class="hs-comment">-- Question: Is this true iff there is one possible parsing of every sentence in such a language?</span><span>
+</span><a name="line-488"></a><span class="hs-comment">-- In other words, it is unambiguous?</span><span>
+</span><a name="line-489"></a><span class="hs-comment">--</span><span>
+</span><a name="line-490"></a><span class="hs-comment">-- Note: In other words, we have a binary relation:</span><span>
+</span><a name="line-491"></a><span class="hs-comment">--</span><span>
+</span><a name="line-492"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-493"></a><span class="hs-comment">--  (~) :: (a :: k :: L) -&gt; (b :: k  :: L) -&gt; ('Just (a ~~ b) :: Maybe k :: L)</span><span>
+</span><a name="line-494"></a><span class="hs-comment">--  (~) :: (a :: k :: L) -&gt; (b :: k' :: L) -&gt; ('Nothing       :: Maybe k :: L)</span><span>
+</span><a name="line-495"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-496"></a><span class="hs-comment">--</span><span>
+</span><a name="line-497"></a><span class="hs-comment">-- It must be at least left/right (right, w.l.o.g.) associative for fixed @k@.</span><span>
+</span><a name="line-498"></a><span class="hs-comment">--</span><span>
+</span><a name="line-499"></a><span class="hs-comment">-- So we have three layers:</span><span>
+</span><a name="line-500"></a><span class="hs-comment">--</span><span>
+</span><a name="line-501"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-502"></a><span class="hs-comment">--  A language: L</span><span>
+</span><a name="line-503"></a><span class="hs-comment">--  The kind level (where terms with quivalent kinds combine)</span><span>
+</span><a name="line-504"></a><span class="hs-comment">--  The term level or GADT term level (The AST of the language)</span><span>
+</span><a name="line-505"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-506"></a><span class="hs-comment">--</span><span>
+</span><a name="line-507"></a><span class="hs-comment">-- If we attempt to combine two terms, for the combination to be unique, we must have that their kinds are equal (that is, the kinds must form a partition on the types).</span><span>
+</span><a name="line-508"></a><span class="hs-comment">--</span><span>
+</span><a name="line-509"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-510"></a><span class="hs-comment">--  Within a fixed kind, the operation must be associative (or just right/left associative?)</span><span>
+</span><a name="line-511"></a><span class="hs-comment">--  Between two kinds, I believe it may also be associative (hmm, it really probably only needs to be right/left associative)</span><span>
+</span><a name="line-512"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-513"></a><span class="hs-comment">--</span><span>
+</span><a name="line-514"></a><span class="hs-identifier">seriesJoinPoints</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-515"></a><a name="seriesJoinPoints"><a href="Data.SwapList.html#seriesJoinPoints"><span class="hs-identifier">seriesJoinPoints</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-516"></a><span>
+</span><a name="line-517"></a><span>
+</span><a name="line-518"></a><span class="hs-comment">-- | An even stronger version forces a sequence on the resulting datatype, for example, for a type-sum over a pair, we have the language:</span><span>
+</span><a name="line-519"></a><span class="hs-comment">--</span><span>
+</span><a name="line-520"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-521"></a><span class="hs-comment">--  L = { a(ba)*, b(ab)* }</span><span>
+</span><a name="line-522"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-523"></a><span class="hs-comment">--</span><span>
+</span><a name="line-524"></a><span class="hs-comment">-- Where the language @L@ is equivalent to the language of sequences formed by squashing over a list-like or linear data structure.</span><span>
+</span><a name="line-525"></a><span class="hs-comment">--</span><span>
+</span><a name="line-526"></a><span class="hs-comment">-- Note: In a complete binary tree as the outer structure, we instead have that the @a,b@'s form a two-coloring of the binary tree.</span><span>
+</span><a name="line-527"></a><span class="hs-comment">-- However, @L@ is still the language generated.</span><span>
+</span><a name="line-528"></a><span class="hs-comment">--</span><span>
+</span><a name="line-529"></a><span class="hs-comment">-- More precisely:</span><span>
+</span><a name="line-530"></a><span class="hs-comment">--</span><span>
+</span><a name="line-531"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-532"></a><span class="hs-comment">--  a | b | \(x :: a) -&gt; a, (b, (x :: a)), (b, (x :: a)) | \(x :: b) -&gt; b, (a, (x :: b)), (a, (x :: b))</span><span>
+</span><a name="line-533"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-534"></a><span class="hs-comment">--</span><span>
+</span><a name="line-535"></a><span class="hs-comment">-- Thus it seems that the inner structure is determined by the outer one (In this case, the inner structure is L and the outer structure is Either)</span><span>
+</span><a name="line-536"></a><span class="hs-identifier">strongerVersionSequence</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-537"></a><a name="strongerVersionSequence"><a href="Data.SwapList.html#strongerVersionSequence"><span class="hs-identifier">strongerVersionSequence</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-538"></a><span>
+</span><a name="line-539"></a><span>
+</span><a name="line-540"></a><span class="hs-comment">-- | In Data.FGLang, we found that the laws:</span><span>
+</span><a name="line-541"></a><span class="hs-comment">--</span><span>
+</span><a name="line-542"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-543"></a><span class="hs-comment">--  f (g a) &lt;-&gt; f (f (g a)) &lt;-&gt; f (g (f a))</span><span>
+</span><a name="line-544"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-545"></a><span class="hs-comment">--</span><span>
+</span><a name="line-546"></a><span class="hs-comment">-- (Where the @(&lt;-&gt;)@ are bijections, and @f,g@ are Functors.)</span><span>
+</span><a name="line-547"></a><span class="hs-comment">-- generate a regular language of the form: @(F+)G(F?)@</span><span>
+</span><a name="line-548"></a><span class="hs-comment">--  representing what is reachable from @f (g a)@, i.e. the non-free part of the language.</span><span>
+</span><a name="line-549"></a><span class="hs-comment">--</span><span>
+</span><a name="line-550"></a><span class="hs-comment">-- This immediately shows that none of the following classes are implied:</span><span>
+</span><a name="line-551"></a><span class="hs-comment">--</span><span>
+</span><a name="line-552"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-553"></a><span class="hs-comment">--  Monad, Comonad, Applicative, Traversable, Distributive</span><span>
+</span><a name="line-554"></a><span class="hs-comment">-- @</span><span>
+</span><a name="line-555"></a><span class="hs-comment">--</span><span>
+</span><a name="line-556"></a><span class="hs-identifier">dataFGLanglaws</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-557"></a><a name="dataFGLanglaws"><a href="Data.SwapList.html#dataFGLanglaws"><span class="hs-identifier">dataFGLanglaws</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-558"></a><span>
+</span><a name="line-559"></a><span>
+</span><a name="line-560"></a></pre></body></html>
