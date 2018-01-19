@@ -2,12 +2,12 @@
 
 set -ex
 
-rm -f graph.dot graph.jpg
+rm -f dependency_graph.dot dependency_graph.jpg
 
 # https://github.com/yav/graphmod
-find src -name '*.hs' | xargs graphmod -q > graph.dot
+# stack install graphmod
+find src -name '*.hs' | xargs graphmod -q > dependency_graph.dot
 
 # brew install graphviz
-# brew info graphviz
-/usr/local/Cellar/graphviz/2.40.1/bin/dot -Tjpg graph.dot -o graph.jpg
+dot -Tjpg dependency_graph.dot -o dependency_graph.jpg
 
