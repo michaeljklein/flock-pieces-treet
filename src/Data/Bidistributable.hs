@@ -94,7 +94,9 @@ commonVariableTypes :: ()
 commonVariableTypes = ()
 
 
--- Let C be a category. F associates (X is an object in C and G(X) is as well)
+-- | Let @C@ be a category. @F@ associates (@X@ is an object in @C@ and @G(X)@ is as well):
+--
+-- @
 --   a  :: X      => F(a) :: F(X)
 --   f  :: X -> Y => F(f) :: F(X) -> F(Y)
 --   id_X :: X -> X => F(id_X) = id_F(X) :: F(X) -> F(X)
@@ -105,41 +107,68 @@ commonVariableTypes = ()
 --   f  :: X -> Y => G(f) :: G(X) -> G(Y)
 --   id_X :: X -> X => G(id_X) = id_G(X) :: G(X) -> G(X)
 --   f :: X -> Y, g :: Y -> Z, g . f :: X -> Z => G (g . f) = G(g) . G(f) :: G(X) -> G(Z)
+-- @
+--
+functorNotes :: ()
+functorNotes = ()
 
--- A is an object in C.
 
--- We want: functor isomorphisms between these compositions of F and G:
+-- | We want: functor isomorphisms between these compositions of F and G:
+--
+-- @
 --   F(G(A))    -- we have a composition of functors
 --   F(F(G(A))) -- we partition the outer functor into pieces such that `unique partition (xs :: f (g a))` is true for our partition (if it exists, of course, that's where graph coloring comes in)
 --   F(G(F(A))) -- we push the partition into the inner functor, resulting in the connected (f (g a)) pieces being joined along their partitions.
---              -- In other words, it pulls the partition up to F's level while pushing the structure of F down into G. The structure of F is available to G in slices (local by definition of the partition).
---              -- finally, all of these operations are invertible since we have unique partitions
---              -- additionally, the functors which this works for are local functors and computers _really_ like computational and data locality. like they simply adore it.
---              --   computational locality makes stream and massively parallel processing a breeze (case in point, the line-by-line parser I just wrote)
+-- @
+--
+-- In other words, it pulls the partition up to F's level while pushing the structure of F down into G. The structure of F is available to G in slices (local by definition of the partition).
+--
+-- Note: all of these operations are invertible since we have unique partitions.
+--
+-- Additionally, the functors which this works for are local functors and computers _really_ like computational and data locality. Like they simply adore it.
+-- Computational locality makes stream and massively parallel processing a breeze (case in point, the line-by-line parser I just wrote)
+--
+functorIsomorphismCompositions :: ()
+functorIsomorphismCompositions = ()
 
+
+-- | That is, we want three natural transformations that are also isomorphisms between those compositions.
+--
+-- @
 --   f :: X -> Y => F(G(f)) :: F(G(X)) -> F(G(Y))
-
--- That is, we want three natural transformations that are also isomorphisms between those compositions.
+--
 --   X :: C => eta_1(X) :: F(G(X)) -> F(F(G(X))) :: C -> C
 --   X :: C => eta_2(X) :: F(F(G(X))) -> F(G(F(X))) :: C -> C
 --   X :: C => eta_3(X) :: F(G(F(X))) -> F(G(X)) :: C -> C
-
+--
 --   f :: X -> Y :: C -> C => eta_1(Y) . F(G(f)) = F(F(G(f))) . eta_1(X) :: F(G(X)) -> F(F(G(Y))) :: C -> C
 --   f :: X -> Y :: C -> C => eta_2(Y) . F(F(G(f))) = F(G(F(f))) . eta_2(X) :: F(F(G(X))) -> F(G(F(Y))) :: C -> C
 --   f :: X -> Y :: C -> C => eta_3(Y) . F(G(F(f))) = F(G(f)) . eta_3(X) :: F(G(F(X))) -> F(G(Y)) :: C -> C
-
+-- @
+--
 -- We require these natural transformations to be bijections.
-
+--
+-- @
 -- The three base words (those functor compositions) are equivalent
 -- Functor composition is associative
 -- We have a compositional identity, the identity functor
-
--- We thus have a group with the binary operation (.), identity the category identity, every element is invertible because we have isomorphisms between the compositions.
---   It has the presentation: f g = f f g = f g f
---   Since it is a group, we can form the language of elements equivalent to those three words.
---     This diagram makes it clear:
+-- @
 --
--- the lines are equivalence and the . is composition
+naturalIsomorphisms :: ()
+naturalIsomorphisms = ()
+
+
+-- | We thus have a group with the binary operation (.), identity the category identity, every element is invertible because we have isomorphisms between the compositions.
+--
+-- It has the presentation: @f g = f f g = f g f@.
+--
+-- Since it is a group, we can form the language of elements equivalent to those three words.
+--
+-- This diagram makes it clear:
+--
+-- (the lines are equivalence and the . is composition)
+--
+-- @
 --
 --             (f . g)
 --               / \
@@ -148,42 +177,63 @@ commonVariableTypes = ()
 --            /       \
 --           /         \
 --   f . (f . g) --- (f . g) . f
+-- @
 
--- First of all, we have the word "fg".
+-- | First of all, we have the word "fg".
+--
+-- @
 --   Next, we have the word formed by performing the substitution "fg -> fgf", namely "fgf".
 --   Next, we have the word formed by performing the substitution "fg -> ffg", namely "ffg".
-
---   The substitution rules in full are as follows (with the substring "fg" wrapped in parentheses for emphasis alone):
---     "(fg)  -> f(fg)"
---     "f(fg) -> (fg)"
---     "(fg)  -> (fg)f"
---     "(fg)f -> (fg)"
---     "f(fg) -> (fg)f"
---     "(fg)f -> f(fg)"
---     ----------------
---       It's a rote exercise to show that any rule of the form "f?(fg)f? -> f?(fg)f?" can be derived.
-
---   Since the substring "fg" can never be broken by the available base rules, we simply have the ability to induct on "f?(fg)f? -> f?(fg)f?" to form "f{n}(fg)f{m}" for any n,m.
---     We simply compose the base rule with itself (max n m) times. We then resolve the optionals (?'s) to the number of "f"'s desired on either side of the "(fg)" center.
---   We thus have that this language is exactly the regular language: "(f*)(fg)(f*)"
-
-
--- One example application is [], Maybe, where pushing ([Maybe a] -> [Maybe [a]]) partitions by isJust. This is stream-friendly
-
--- Another example is ListT IO, Threaded, where Threaded is a comonad that evaluates its contents on extract, which we can do purely since we're still inside of ListT IO and couldn't do otherwise.
---   Pushing in is some parallel execution strategy
-
---   In other words, we can use this to treat monads as comonads. We just do: (Monad m => Turn (Compose m f) m) and the inner `m` can be treated as a comonad inside the turn.
---     I.e. we have: Monad m => m (Comonad m => ())
---     This could be well-typed if GHC supported impredicative polymorphism, but it doesn't.
---     How does it work?
---       Well, inside of `m`, we have extract (m (m a) -> m a), which is just join
---       Also, inside of `m`, we still have return so then we get duplicate (m (m a) -> m (m (m a))), which is return = fmap return
-
---     Inside of a comonad, we get a monad. This is the free comonad (/monad)
+-- @
 --
---   Ahhh, don't fotget about orthogonal lists, e.g. a 2d array. this may be able to pass layers in and out
+-- The substitution rules in full are as follows (with the substring "fg" wrapped in parentheses for emphasis alone):
+--
+-- @
+--  "(fg)  -> f(fg)"
+--  "f(fg) -> (fg)"
+--  "(fg)  -> (fg)f"
+--  "(fg)f -> (fg)"
+--  "f(fg) -> (fg)f"
+--  "(fg)f -> f(fg)"
+--  ----------------
+--    It's a rote exercise to show that any rule of the form "f?(fg)f? -> f?(fg)f?" can be derived.
+-- @
+--
+-- Since the substring "fg" can never be broken by the available base rules, we simply have the ability to induct on "f?(fg)f? -> f?(fg)f?" to form "f{n}(fg)f{m}" for any n,m.
+--
+-- We simply compose the base rule with itself (max n m) times. We then resolve the optionals (?'s) to the number of "f"'s desired on either side of the "(fg)" center.
+--
+-- We thus have that this language is exactly the regular language: @"(f*)(fg)(f*)"@
+--
+regularLanguage :: ()
+regularLanguage = ()
 
+
+-- | One example application is @[], Maybe@, where pushing @([Maybe a] -> [Maybe [a]])@ partitions by isJust. This is stream-friendly.
+--
+-- Another example is @ListT IO, Threaded@, where @Threaded@ is a comonad that evaluates its contents on extract,
+-- which we can do purely since we're still inside of @ListT IO@ and couldn't do otherwise.
+--
+-- Pushing in is some parallel execution strategy, in that case.
+--
+-- In other words, we can use this to treat monads as comonads. We just do: @(Monad m => Turn (Compose m f) m)@ and the inner @m@ can be treated as a comonad inside the turn.
+--
+-- I.e. we have: @Monad m => m (Comonad m => ())@
+--
+-- This could be well-typed if GHC supported impredicative polymorphism, but it doesn't.
+--
+-- How does it work?
+--
+-- @
+--  Well, inside of `m`, we have extract (m (m a) -> m a), which is just join
+--  Also, inside of `m`, we still have return so then we get duplicate (m (m a) -> m (m (m a))), which is return = fmap return
+-- @
+--
+-- Inside of a comonad, we get a monad. This is the free comonad (/monad)
+--
+-- Ahhh, don't forget about orthogonal lists, e.g. a 2d array. this may be able to pass layers in and out
+exampleApplications :: ()
+exampleApplications = ()
 
 -- | Really, we want two applications of push to be equivalent to pure push (we don't gain anything from pushing more)
 --   (the benefit is that it's equivalent to the limit of the other pushes OR you can consider it as a guarantee that everything to be pushed is pushed in the first push)
@@ -258,43 +308,74 @@ weakestVersionDuplicate :: ()
 weakestVersionDuplicate = ()
 
 
--- Really, we probably want to have this property on the left as well, namely:
---     (in words: partitioning an already partitioned functor only adds a trivial layer, since the functor has already been partitioned)
+-- | Really, we probably want to have this property on the left as well, namely:
+-- partitioning an already partitioned functor only adds a trivial layer, since the functor has already been partitioned.
+--
+-- @
 --   partition :: f (g a)  -> f (f (g a))
 --   fmap partition . partition = fmap puref . partition
 --   fmap extract . fmap partition . partition = partition
+-- @
+--
+leftPartitionProperty :: ()
+leftPartitionProperty = ()
 
 
--- To have everything be pushed/pulled through the (f . g) `joint`, we require that pushing/pulling are idempotent in some way. The question is, how can we most abstractly represent that these actions are idempotent? we don't necessarily have an equality or other properties of these functors. Our answer is that the action of a second push or pull is a so-called "least action":
+-- To have everything be pushed/pulled through the (f . g) `joint`, we require that pushing/pulling are idempotent in some way.
+--
+-- The question is, how can we most abstractly represent that these actions are idempotent?
+--
+-- We don't necessarily have an equality or other properties of these functors.
+--
+-- Our answer is that the action of a second push or pull is a so-called "least action":
+--
+-- @
 --   push  :: forall (a :: c). f (g a) -> f (g (f a))
 --   push . push                :: forall (a :: c). f (g a) -> f (g (f (f a)))
 --   push . push = l_push . push
 --   l_push :: forall (a :: c). f (g (f a)) -> f (g (f (f a)))
 --     l_push is a least action from f (g (f a)) -> f (g (f (f a)))
+-- @
+--
+leastActionExhaustivity :: ()
+leastActionExhaustivity = ()
 
---   we want to have the least action done possible between those two compositions of functors.
---   specifically, we want the least _left_ action.
---   what makes an action least?
---     well, I think that (return :: forall (a :: c). a -> f a) is a least action since there's no room for it to add more than the minimum amount of f's structure
---       ahhhh, if that doesn't exist, then the least amount of f's structure you could add would be:
---         (duplicate :: forall (a :: c). f a -> f (f a))
---       after that, it would be:
---         (_         :: g (f a) -> g (f (f a)))
---       and finally, after that, it would be:
---         (_         :: f (g (f a)) -> f (g (f (f a))))
---       But we want it to be independent of g's action, so we restrict our options to (return) and (duplicate).
---         finally, since (return, fmap return :: f a -> f (f a)), we may be able to restrict ourselves to needing duplicate.
---           return . return == fmap return . return?
---           fmap return . return == (>>= return . return) . return == \x -> (return x >>= (return . return)) == \x -> (return . return) x == return . return
---           Yes, QED
---       let's take the action to be duplicate.
---       now, we want it to be:
---         duplicate . duplicate = fmap duplicate . duplicate :: f a -> f (f (f a))
---       that is, the duplicates commute.
---       actually, if the duplicates commute then we don't have an original, e.g. f a -> f (f a), the original context could be left, right, or both.
 
---       what happens here, is that if it goes left, then (duplicate . duplicate) sends it all the way to the left and (fmap f . duplicate) does as well
---                                  if it goes right, then (duplicate . duplicate) sinds it to the right and (so does fmap f . duplicate)
+-- We want to have the least action done possible between those two compositions of functors.
+--
+-- Specifically, we want the least _left_ action.
+--
+--
+-- What makes an action least?
+--
+-- Well, I think that @(return :: forall (a :: c). a -> f a)@ is a least action since there's no room for it to add more than the minimum amount of f's structure.
+--
+-- Ahhhh, if that doesn't exist, then the least amount of f's structure you could add would be:
+--
+-- @
+--    (duplicate :: forall (a :: c). f a -> f (f a))
+--  after that, it would be:
+--    (_         :: g (f a) -> g (f (f a)))
+--  and finally, after that, it would be:
+--    (_         :: f (g (f a)) -> f (g (f (f a))))
+--  But we want it to be independent of g's action, so we restrict our options to (return) and (duplicate).
+--    finally, since (return, fmap return :: f a -> f (f a)), we may be able to restrict ourselves to needing duplicate.
+--      return . return == fmap return . return?
+--      fmap return . return == (>>= return . return) . return == \x -> (return x >>= (return . return)) == \x -> (return . return) x == return . return
+--      Yes, QED
+--  let's take the action to be duplicate.
+--  now, we want it to be:
+--    duplicate . duplicate = fmap duplicate . duplicate :: f a -> f (f (f a))
+--  that is, the duplicates commute.
+--  actually, if the duplicates commute then we don't have an original, e.g. f a -> f (f a), the original context could be left, right, or both.
+--
+--  what happens here, is that if it goes left, then (duplicate . duplicate) sends it all the way to the left and (fmap f . duplicate) does as well
+--                             if it goes right, then (duplicate . duplicate) sinds it to the right and (so does fmap f . duplicate)
+-- @
+--
+leastLeftAction :: ()
+leastLeftAction = ()
+
 
 --       ok, back to basics:
 --         push :: f (g a) -> f (g (f a))
