@@ -396,12 +396,6 @@ unfoldTree :: Functor m => (b -> (a, m b)) -> b -> Tree m a
 unfoldForest :: Functor m => (b -> m (a, b)) -> b -> Forest m a
 iterateTree :: Applicative m => (a -> m a) -> a -> m (Tree m a)
 iterateForest :: Applicative m => (a -> m a) -> a -> Forest m a
-
--- | Compare length of lists, without <a>Int</a> or <a>Eq</a>
-cmpLength :: [a] -> [b] -> Ordering
-
--- | Minimums by:
-minsBy :: (a -> a -> Ordering) -> [a] -> [a]
 instance GHC.Generics.Generic (Control.Monad.Trans.TreeT.Tree m a)
 instance GHC.Generics.Generic (Control.Monad.Trans.TreeT.Forest m a)
 instance GHC.Base.Functor m => GHC.Base.Functor (Control.Monad.Trans.TreeT.Tree m)
@@ -1156,6 +1150,330 @@ instance (Data.Biapplicative.Biapplicative p, GHC.Base.Applicative m, GHC.Base.M
 instance Data.Bidistributable.Swap (,)
 instance Data.Bidistributable.Swap Data.Either.Either
 instance Data.Bidistributable.Bidistributable Data.Either.Either []
+
+module Data.Flip
+
+-- | A four-part mutually recursive data type
+--   
+--   Notes:
+--   
+--   Number of cycles: w.l.o.g we require the first element to be the
+--   minimum
+--   
+--   <pre>
+--   1 minimum
+--   * permutations of all else
+--   (n-1)! ?
+--   </pre>
+--   
+--   E.g. for two, there's exactly one cycle:
+--   
+--   <pre>
+--   Value, Container =&gt;
+--     Value * Container (..), Container (Value * ..)
+--     Value + Container (..), Container (Value + ..)
+--   </pre>
+--   
+--   Interesting example: unary / binary
+--   
+--   <pre>
+--   (a -&gt; b)
+--   (a -&gt; b -&gt; c)
+--   
+--   a -&gt; b
+--   a -&gt; (b -&gt; c)
+--   a -&gt; (a, b, b -&gt; c)
+--   b -&gt; (b, c)
+--   a -&gt; (b, (b -&gt; (c, next)))
+--   </pre>
+--   
+--   Want:
+--   
+--   Applicative instances for <a>F1</a>, <a>F3</a>
+--   
+--   <a>Comonad</a> instances for <a>F2</a>, <a>F4</a>
+newtype F1 a b c
+F1 :: (a -> F2 a b c) -> F1 a b c
+[getF1] :: F1 a b c -> a -> F2 a b c
+
+-- | Continuation of <a>F1</a>
+newtype F2 a b c
+F2 :: (b, F3 a b c) -> F2 a b c
+[getF2] :: F2 a b c -> (b, F3 a b c)
+
+-- | Continuation of <a>F2</a>
+newtype F3 a b c
+F3 :: (b -> F4 a b c) -> F3 a b c
+[getF3] :: F3 a b c -> b -> F4 a b c
+
+-- | Continuation of <a>F3</a>
+newtype F4 a b c
+F4 :: (c, F1 a b c) -> F4 a b c
+[getF4] :: F4 a b c -> (c, F1 a b c)
+
+-- | I believe the exact list of "free" morphisms between <tt>F</tt>'s is:
+--   
+--   <pre>
+--   1 -&gt; 1          (we don't have an <tt>a</tt>, and F1's the only one that depends directly on <tt>a</tt>)
+--   2 -&gt; 1, 2, 3, 4 (see implementations)
+--   3 -&gt; 3          (as with F1, we don't have <tt>b</tt>..)
+--   4 -&gt; 1, 4       (<a>snd</a> gives F1, then we get stuck)
+--   </pre>
+freeMorphismsNotes :: ()
+
+-- | <a>id</a>
+morphF11 :: F1 a b c -> F1 a b c
+functorMorphF11 :: TestBatch
+
+-- | <a>F2</a> to <a>F4</a>, then <a>F4</a> to <a>F1</a>
+morphF21 :: F2 a b c -> F1 a b c
+functorMorphF21 :: TestBatch
+
+-- | <a>id</a>
+morphF22 :: F2 a b c -> F2 a b c
+functorMorphF22 :: TestBatch
+
+-- | Get and <a>snd</a>
+morphF23 :: F2 a b c -> F3 a b c
+functorMorphF23 :: TestBatch
+
+-- | Get and apply the <tt>b</tt> in <a>F2</a> to the function in <a>F3</a>
+morphF24 :: F2 a b c -> F4 a b c
+functorMorphF24 :: TestBatch
+
+-- | <a>id</a>
+morphF33 :: F3 a b c -> F3 a b c
+functorMorphF33 :: TestBatch
+
+-- | Get and <a>snd</a>
+morphF41 :: F4 a b c -> F1 a b c
+functorMorphF41 :: TestBatch
+
+-- | <a>id</a>
+morphF44 :: F4 a b c -> F4 a b c
+functorMorphF44 :: TestBatch
+testF1Functor :: TestBatch
+testF2Functor :: TestBatch
+testF3Functor :: TestBatch
+testF4Functor :: TestBatch
+
+-- | Stub instance
+
+-- | Stub instance
+
+-- | Note that of <a>F1</a>, <a>F2</a>, <a>F3</a>, and <a>F4</a>, only
+--   <a>F4</a> is always a <a>Comonad</a> (if <tt>a ~ b ~ c</tt>, for
+--   example, I believe <a>F2</a> would be one as well):
+--   
+--   <a>F1</a> would need <a>F2</a> to be a <a>Comonad</a>, and a default
+--   value for <tt>a</tt>
+--   
+--   <a>F2</a> would require <a>F3</a> to be a <a>Comonad</a>
+--   
+--   <a>F3</a> would require a default value for <tt>b</tt>, and for
+--   <a>F4</a> to be a <a>Comonad</a> (which I believe it is)
+--   
+--   <pre>
+--   extend extract = ext
+--     ext (F4 ~(x, xs)) = F4 (x, F1 . fmap (F2 . fmap (F3 . fmap ext . getF3) . getF2) . getF1 $ xs)
+--   
+--     since F1, F2, F3, getF1, getF2, getF3, fmap do not affect the values, aside from <tt>fmap ext</tt>, I believe this may be proof of: ext == id
+--   
+--   extend extract      = id
+--   extract . extend f  = f
+--   extend f . extend g = extend (f . extend g)
+--   </pre>
+
+-- | Like <a>flip</a>
+newtype Flip f a b
+Flip :: f b a -> Flip f a b
+[getFlip] :: Flip f a b -> f b a
+
+-- | <a>coerce</a>
+withFlip :: (Flip f1 a1 b1 -> Flip f a b) -> f1 b1 a1 -> f b a
+
+-- | <a>Flip</a> for three arguments
+newtype Flip2 f a b c
+Flip2 :: f c b a -> Flip2 f a b c
+[getFlip2] :: Flip2 f a b c -> f c b a
+
+-- | Coerce
+withFlip2 :: (Flip2 f1 a1 b1 c1 -> Flip2 f a b c) -> f1 c1 b1 a1 -> f c b a
+
+-- | A newtype to ensure generated functions (<a>Arbitrary</a>) are
+--   inverses of each other
+newtype SomeIso a b
+SomeIso :: (b -> a, a -> b) -> SomeIso a b
+[getSomeIso] :: SomeIso a b -> (b -> a, a -> b)
+
+-- | Ignore arguments
+
+-- | Unsigned integer addition is an inverse to subtraction
+
+-- | Test <a>IsoFunctor</a>
+testIsoFunctor :: (IsoFunctor f, EqProp (f a), Show (f a), Arbitrary (SomeIso a a), Arbitrary (f a)) => f a -> TestBatch
+
+-- | A "functor" that requires an isomorphism to map over
+class IsoFunctor f
+isomap :: IsoFunctor f => (b -> a) -> (a -> b) -> f a -> f b
+
+-- | Uses <a>Word</a>, <a>testIsoFunctor</a>
+testIsoFunctorF1 :: TestBatch
+
+-- | Uses <a>Word</a>, <a>testIsoFunctor</a>
+testIsoFunctorF2 :: TestBatch
+
+-- | Uses <a>Word</a>, <a>testIsoFunctor</a>
+testIsoFunctorF3 :: TestBatch
+
+-- | Uses <a>Word</a>, <a>testIsoFunctor</a>
+testIsoFunctorF4 :: TestBatch
+
+-- | All <a>TestBatch</a>s
+testBatches :: [TestBatch]
+
+-- | Run all test batches using <a>quickBatch</a>
+quickTestBatches :: IO ()
+instance GHC.Show.Show (f c b a) => GHC.Show.Show (Data.Flip.Flip2 f a b c)
+instance GHC.Classes.Ord (f c b a) => GHC.Classes.Ord (Data.Flip.Flip2 f a b c)
+instance GHC.Classes.Eq (f c b a) => GHC.Classes.Eq (Data.Flip.Flip2 f a b c)
+instance Test.QuickCheck.Arbitrary.Arbitrary (f b a) => Test.QuickCheck.Arbitrary.Arbitrary (Data.Flip.Flip f a b)
+instance Test.QuickCheck.Checkers.EqProp (f b a) => Test.QuickCheck.Checkers.EqProp (Data.Flip.Flip f a b)
+instance GHC.Show.Show (f b a) => GHC.Show.Show (Data.Flip.Flip f a b)
+instance GHC.Classes.Ord (f b a) => GHC.Classes.Ord (Data.Flip.Flip f a b)
+instance GHC.Classes.Eq (f b a) => GHC.Classes.Eq (Data.Flip.Flip f a b)
+instance GHC.Show.Show b => GHC.Show.Show (Data.Flip.F2 a b c)
+instance GHC.Show.Show c => GHC.Show.Show (Data.Flip.F4 a b c)
+instance Data.Flip.IsoFunctor (Data.Flip.Flip (Data.Flip.F1 a) c)
+instance Data.Flip.IsoFunctor (Data.Flip.Flip (Data.Flip.F2 a) c)
+instance Data.Flip.IsoFunctor (Data.Flip.Flip (Data.Flip.F3 a) c)
+instance Data.Flip.IsoFunctor (Data.Flip.Flip (Data.Flip.F4 a) c)
+instance GHC.Show.Show (Data.Flip.SomeIso a b)
+instance Test.QuickCheck.Arbitrary.Arbitrary (Data.Flip.SomeIso GHC.Types.Word GHC.Types.Word)
+instance Data.Functor.Contravariant.Contravariant (Data.Flip.Flip2 Data.Flip.F1 a b)
+instance Data.Functor.Contravariant.Contravariant (Data.Flip.Flip2 Data.Flip.F2 a b)
+instance Data.Functor.Contravariant.Contravariant (Data.Flip.Flip2 Data.Flip.F3 a b)
+instance Data.Functor.Contravariant.Contravariant (Data.Flip.Flip2 Data.Flip.F4 a b)
+instance GHC.Base.Functor (Data.Flip.F1 a b)
+instance GHC.Base.Functor (Data.Flip.F2 a b)
+instance GHC.Base.Functor (Data.Flip.F3 a b)
+instance GHC.Base.Functor (Data.Flip.F4 a b)
+instance (Test.QuickCheck.Arbitrary.Arbitrary a, GHC.Show.Show a, Test.QuickCheck.Arbitrary.Arbitrary b, GHC.Classes.Eq b, GHC.Show.Show b, GHC.Classes.Eq c) => Test.QuickCheck.Checkers.EqProp (Data.Flip.F1 a b c)
+instance (Test.QuickCheck.Arbitrary.Arbitrary a, GHC.Show.Show a, Test.QuickCheck.Arbitrary.Arbitrary b, GHC.Classes.Eq b, GHC.Show.Show b, GHC.Classes.Eq c) => Test.QuickCheck.Checkers.EqProp (Data.Flip.F2 a b c)
+instance (Test.QuickCheck.Arbitrary.Arbitrary a, GHC.Show.Show a, Test.QuickCheck.Arbitrary.Arbitrary b, GHC.Classes.Eq b, GHC.Show.Show b, GHC.Classes.Eq c) => Test.QuickCheck.Checkers.EqProp (Data.Flip.F3 a b c)
+instance (Test.QuickCheck.Arbitrary.Arbitrary a, GHC.Show.Show a, Test.QuickCheck.Arbitrary.Arbitrary b, GHC.Classes.Eq b, GHC.Show.Show b, GHC.Classes.Eq c) => Test.QuickCheck.Checkers.EqProp (Data.Flip.F4 a b c)
+instance (Test.QuickCheck.Arbitrary.CoArbitrary a, Test.QuickCheck.Arbitrary.Arbitrary b, Test.QuickCheck.Arbitrary.CoArbitrary b, Test.QuickCheck.Arbitrary.Arbitrary c) => Test.QuickCheck.Arbitrary.Arbitrary (Data.Flip.F1 a b c)
+instance (Test.QuickCheck.Arbitrary.CoArbitrary a, Test.QuickCheck.Arbitrary.Arbitrary b, Test.QuickCheck.Arbitrary.CoArbitrary b, Test.QuickCheck.Arbitrary.Arbitrary c) => Test.QuickCheck.Arbitrary.Arbitrary (Data.Flip.F2 a b c)
+instance (Test.QuickCheck.Arbitrary.CoArbitrary a, Test.QuickCheck.Arbitrary.CoArbitrary b, Test.QuickCheck.Arbitrary.Arbitrary b, Test.QuickCheck.Arbitrary.Arbitrary c) => Test.QuickCheck.Arbitrary.Arbitrary (Data.Flip.F3 a b c)
+instance (Test.QuickCheck.Arbitrary.CoArbitrary a, Test.QuickCheck.Arbitrary.CoArbitrary b, Test.QuickCheck.Arbitrary.Arbitrary b, Test.QuickCheck.Arbitrary.Arbitrary c) => Test.QuickCheck.Arbitrary.Arbitrary (Data.Flip.F4 a b c)
+instance GHC.Show.Show (Data.Flip.F1 a b c)
+instance GHC.Show.Show (Data.Flip.F3 a b c)
+instance Control.Comonad.Comonad (Data.Flip.F4 a b)
+
+module Data.Functor.Object
+
+-- | Both a right result and a continuation (<a>Action</a>)
+data Object f b c
+Object :: (c, Action f b c) -> Object f b c
+[getObject] :: Object f b c -> (c, Action f b c)
+
+-- | An action which could contain a left result, continuation
+--   (<a>Object</a>)
+data Action f b c
+Action :: (f b (Object f b c)) -> Action f b c
+[runAction] :: Action f b c -> (f b (Object f b c))
+
+-- | Simple fixed point newtype
+newtype Fix f
+Fix :: f (Fix f) -> Fix f
+[runFix] :: Fix f -> f (Fix f)
+
+-- | Cycle a pair, resulting in a fixed point
+cyclePair :: Object (,) a b -> Fix ((,) (a, b))
+
+-- | Convert a <a>Fix</a> to an infinite list
+fixList :: Fix ((,) a) -> [a]
+
+-- | <a>Object</a>, but with a sum (<a>Either</a>) instead of a tuple
+data Result f b c
+Result :: Either c (Effect f b c) -> Result f b c
+[getResult] :: Result f b c -> Either c (Effect f b c)
+
+-- | <a>Action</a>, but with a sum (<a>Either</a>) instead of a tuple
+data Effect f b c
+Effect :: f b (Result f b c) -> Effect f b c
+[runEffect] :: Effect f b c -> f b (Result f b c)
+
+-- | Given all the functional pairs to define a function, we can cyclically
+--   wrap the pairs into an <a>Action</a> over pairs.
+--   
+--   Consider generalizing to other nice <tt>(* -&gt; * -&gt; *)</tt>'s
+fromAll :: NonEmpty (a, b) -> Action (,) a b
+
+-- | interesting..
+ish :: (a -> b -> (a', b')) -> NonEmpty a -> NonEmpty b -> Action (,) a' b'
+
+-- | Effectively define <a>fst</a> for an <a>Action</a> over pairs, using
+--   all cases
+fstIsh :: NonEmpty a -> NonEmpty b -> Action (,) (a, b) a
+
+-- | Effectively define <a>snd</a> for an <a>Action</a> over pairs, using
+--   all cases
+sndIsh :: NonEmpty a -> NonEmpty b -> Action (,) (a, b) b
+
+-- | Since there's only a finite number of a's, we can cycle through til we
+--   match, then continue on
+appIsh :: (Eq a, Functor (f t)) => Action (,) a b -> Object f t a -> Object f t b
+
+-- | Convert a flipped result to an either (sum)
+toEither :: Flip (Result (Flip (Object f))) c b -> Either c b
+
+-- | Convert a flipped result to a tuple (product)
+toPair :: Flip (Object (Flip (Object f))) c b -> (c, b)
+
+-- | Undo an <a>Action</a>
+unAction :: Functor (f b) => Action f b c -> f b c
+
+-- | Undo an <a>Object</a>
+unObject :: Functor (f b) => Object f b c -> (f b c, c)
+
+-- | Convert to an <a>Action</a>
+toAction :: Functor (f b) => f b c -> Action f b c
+
+-- | Convert to an <a>Object</a>
+toObject :: Functor (f b) => f b c -> c -> Object f b c
+
+-- | <a>toAction</a>
+fstAction :: Functor (f (b, c)) => f (b, c) b -> Action f (b, c) b
+
+-- | <a>toObject</a>
+fstObject :: Functor (f (b, c)) => f (b, c) b -> b -> Object f (b, c) b
+
+-- | <a>toAction</a>
+sndAction :: Functor (f (b, c)) => f (b, c) c -> Action f (b, c) c
+
+-- | <a>toObject</a>
+sndObject :: Functor (f (b, c)) => f (b, c) c -> c -> Object f (b, c) c
+
+-- | <a>toAction</a>
+swapAction :: Functor (f (b, c)) => f (b, c) (c, b) -> Action f (b, c) (c, b)
+
+-- | <a>toObject</a>
+swapObject :: Functor (f (b, c)) => f (b, c) (c, b) -> (c, b) -> Object f (b, c) (c, b)
+
+-- | <a>toAction</a>
+mapEitherAction :: Functor (f (c -> d, Either b c)) => f (c -> d, Either b c) (Either b d) -> Action f (c -> d, Either b c) (Either b d)
+
+-- | <a>toObject</a>
+mapEitherObject :: Functor (f (c -> d, Either b c)) => f (c -> d, Either b c) (Either b d) -> Either b d -> Object f (c -> d, Either b c) (Either b d)
+instance GHC.Generics.Generic (Data.Functor.Object.Fix f)
+instance GHC.Base.Functor (f b) => GHC.Base.Functor (Data.Functor.Object.Result f b)
+instance GHC.Base.Functor (f b) => GHC.Base.Functor (Data.Functor.Object.Effect f b)
+instance GHC.Show.Show a => GHC.Show.Show (Data.Functor.Object.Fix ((,) a))
+instance GHC.Base.Functor (f b) => GHC.Base.Functor (Data.Functor.Object.Object f b)
+instance GHC.Base.Functor (f b) => GHC.Base.Functor (Data.Functor.Object.Action f b)
+instance Control.Comonad.Comonad (f b) => Control.Comonad.Comonad (Data.Functor.Object.Object f b)
+instance Control.Comonad.Comonad (f b) => Control.Comonad.Comonad (Data.Functor.Object.Action f b)
 
 module Data.Rope
 
