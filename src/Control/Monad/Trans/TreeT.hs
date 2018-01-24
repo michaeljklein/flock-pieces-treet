@@ -702,24 +702,3 @@ iterateForest :: Applicative m => (a -> m a) -> a -> Forest m a
 iterateForest f x = Forest (iterateTree f x)
 
 
--- | Compare length of lists, without `Int` or `Eq`
-cmpLength :: [a] -> [b] -> Ordering
-cmpLength (_:xs) (_:ys) = cmpLength xs ys
-cmpLength (  []) (_:_ ) = LT
-cmpLength (_:_ ) (  []) = GT
-cmpLength (  _ ) (  _ ) = EQ
-
--- | Minimums by:
-minsBy :: (a -> a -> Ordering) -> [a] -> [a]
-minsBy _ []     = []
-minsBy f (x:xs) = looop x [x] xs
-  where
-    looop n ys (z:zs) = case f n z of
-                         LT -> looop n    ys  zs
-                         EQ -> looop n (z:ys) zs
-                         GT -> looop z [z]    zs
-    looop _ ys  _     = ys
-
-
-
-
