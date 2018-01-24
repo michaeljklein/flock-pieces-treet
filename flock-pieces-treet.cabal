@@ -18,6 +18,8 @@ library
   exposed-modules:     Control.Monad.Trans.TreeT
                      , Control.Arrow.Tree
                      , Data.Bidistributable
+                     , Data.Flip
+                     , Data.Functor.Object
                      , Data.Rope
                      , Data.SwapList
   build-depends:       base >= 4.9 && < 5
@@ -27,6 +29,7 @@ library
                      , comonad
                      , comonad-transformers
                      , containers
+                     , contravariant
                      , free
                      , mtl
                      , primitive
