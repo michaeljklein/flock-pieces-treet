@@ -5,6 +5,17 @@
 @package flock-pieces-treet
 @version 0.1.0.0
 
+module Control.Monad.Trans.Rope
+
+-- | <tt>Rope</tt> transformer type
+newtype RopeT p m a b
+RopeT :: p a (m (RopeT p m b a)) -> RopeT p m a b
+[pullRopeT] :: RopeT p m a b -> p a (m (RopeT p m b a))
+instance (Data.Bifunctor.Bifunctor p, GHC.Base.Functor m) => Data.Bifunctor.Bifunctor (Control.Monad.Trans.Rope.RopeT p m)
+instance (Data.Bifunctor.Bifunctor p, GHC.Base.Functor m) => GHC.Base.Functor (Control.Monad.Trans.Rope.RopeT p m a)
+instance (Data.Biapplicative.Biapplicative p, GHC.Base.Applicative m) => Data.Biapplicative.Biapplicative (Control.Monad.Trans.Rope.RopeT p m)
+instance (Data.Biapplicative.Biapplicative p, GHC.Base.Applicative m, GHC.Base.Monoid a) => GHC.Base.Applicative (Control.Monad.Trans.Rope.RopeT p m a)
+
 module Control.Monad.Trans.TreeT
 
 -- | Algebraic notes:
@@ -753,11 +764,6 @@ bidistribute :: Bidistributable p f => f (p a b) -> f (p (f a) (f b))
 class Swap p
 swap :: Swap p => p a b -> p b a
 
--- | <tt>Rope</tt> transformer type
-newtype RopeT p m a b
-RopeT :: p a (m (RopeT p m b a)) -> RopeT p m a b
-[$sel:pullRopeT:RopeT] :: RopeT p m a b -> p a (m (RopeT p m b a))
-
 -- | Commonly used variable types:
 --   
 --   <pre>
@@ -1143,10 +1149,6 @@ functorLimitNotes :: ()
 --   b; b,a; b,a,b; b,a,b,a
 --   </pre>
 functorCompositionNotes :: ()
-instance (Data.Bifunctor.Bifunctor p, GHC.Base.Functor m) => Data.Bifunctor.Bifunctor (Data.Bidistributable.RopeT p m)
-instance (Data.Bifunctor.Bifunctor p, GHC.Base.Functor m) => GHC.Base.Functor (Data.Bidistributable.RopeT p m a)
-instance (Data.Biapplicative.Biapplicative p, GHC.Base.Applicative m) => Data.Biapplicative.Biapplicative (Data.Bidistributable.RopeT p m)
-instance (Data.Biapplicative.Biapplicative p, GHC.Base.Applicative m, GHC.Base.Monoid a) => GHC.Base.Applicative (Data.Bidistributable.RopeT p m a)
 instance Data.Bidistributable.Swap (,)
 instance Data.Bidistributable.Swap Data.Either.Either
 instance Data.Bidistributable.Bidistributable Data.Either.Either []
