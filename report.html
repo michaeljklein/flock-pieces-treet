@@ -147,22 +147,18 @@ document.body.className = "script";
 
 <p><a class="all" href="javascript:show('')">All hints</a></p>
 <ul>
-<li><a id="hint0" href="javascript:show('hint0')">Error: Redundant bracket (2)</a></li>
-<li><a id="hint1" href="javascript:show('hint1')">Error: Unused LANGUAGE pragma (7)</a></li>
-<li><a id="hint2" href="javascript:show('hint2')">Warning: Avoid lambda (1)</a></li>
-<li><a id="hint3" href="javascript:show('hint3')">Warning: Redundant $ (1)</a></li>
-<li><a id="hint4" href="javascript:show('hint4')">Warning: Redundant bracket (4)</a></li>
-<li><a id="hint5" href="javascript:show('hint5')">Warning: Use record patterns (2)</a></li>
+<li><a id="hint0" href="javascript:show('hint0')">Error: Unused LANGUAGE pragma (3)</a></li>
+<li><a id="hint1" href="javascript:show('hint1')">Warning: Avoid lambda (1)</a></li>
+<li><a id="hint2" href="javascript:show('hint2')">Warning: Redundant $ (1)</a></li>
+<li><a id="hint3" href="javascript:show('hint3')">Warning: Redundant bracket (4)</a></li>
 </ul>
 
 <p><a class="all" href="javascript:show('')">All files</a></p>
 <ul>
 <li><a id="file0" href="javascript:show('file0')">src/Control/Arrow/Tree.hs (4)</a></li>
 <li><a id="file1" href="javascript:show('file1')">src/Control/Monad/Trans/TreeT.hs (3)</a></li>
-<li><a id="file2" href="javascript:show('file2')">src/Data/Bidistributable.hs (4)</a></li>
-<li><a id="file3" href="javascript:show('file3')">src/Data/Flip.hs (1)</a></li>
-<li><a id="file4" href="javascript:show('file4')">src/Data/Functor/Object.hs (1)</a></li>
-<li><a id="file5" href="javascript:show('file5')">src/Data/SwapList.hs (4)</a></li>
+<li><a id="file2" href="javascript:show('file2')">src/Data/Flip.hs (1)</a></li>
+<li><a id="file3" href="javascript:show('file3')">src/Data/Functor/Object.hs (1)</a></li>
 </ul>
 
 </div>
@@ -173,7 +169,7 @@ v1.9.21
 	- a tool to suggest improvements to your Haskell code.
 </p>
 
-<div class="hint2 file0">
+<div class="hint1 file0">
 src/Control/Arrow/Tree.hs:38:74: Warning: Avoid lambda<br/>
 Found<br/>
 <pre><span class='hs-keyglyph'>\</span> <span class='hs-varid'>z1</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>comp</span> <span class='hs-layout'>(</span><span class='hs-varid'>fx1</span> <span class='hs-varid'>y1</span><span class='hs-layout'>)</span> <span class='hs-layout'>(</span><span class='hs-varid'>fy1</span> <span class='hs-varid'>z1</span><span class='hs-layout'>)</span></pre>
@@ -182,7 +178,7 @@ Why not<br/>
 
 </div>
 
-<div class="hint4 file0">
+<div class="hint3 file0">
 src/Control/Arrow/Tree.hs:239:68: Warning: Redundant bracket<br/>
 Found<br/>
 <pre><span class='hs-layout'>(</span><span class='hs-varid'>undefined</span> <span class='hs-varid'>fs</span><span class='hs-layout'>)</span> <span class='hs-varop'>&lt;&lt;*&gt;&gt;</span> <span class='hs-varid'>xs</span></pre>
@@ -191,7 +187,7 @@ Why not<br/>
 
 </div>
 
-<div class="hint4 file0">
+<div class="hint3 file0">
 src/Control/Arrow/Tree.hs:292:53: Warning: Redundant bracket<br/>
 Found<br/>
 <pre><span class='hs-definition'>rmap</span>
@@ -206,7 +202,7 @@ Why not<br/>
 
 </div>
 
-<div class="hint3 file0">
+<div class="hint2 file0">
 src/Control/Arrow/Tree.hs:292:53: Warning: Redundant $<br/>
 Found<br/>
 <pre><span class='hs-definition'>rmap</span>
@@ -221,7 +217,7 @@ Why not<br/>
 
 </div>
 
-<div class="hint1 file1">
+<div class="hint0 file1">
 src/Control/Monad/Trans/TreeT.hs:7:1: Error: Unused LANGUAGE pragma<br/>
 Found<br/>
 <pre><span class='hs-comment'>{-# LANGUAGE KindSignatures #-}</span></pre>
@@ -230,7 +226,7 @@ Why not remove it.<br/>
 
 </div>
 
-<div class="hint1 file1">
+<div class="hint0 file1">
 src/Control/Monad/Trans/TreeT.hs:15:1: Error: Unused LANGUAGE pragma<br/>
 Found<br/>
 <pre><span class='hs-comment'>{-# LANGUAGE DeriveFunctor #-}</span></pre>
@@ -239,7 +235,7 @@ Why not remove it.<br/>
 
 </div>
 
-<div class="hint1 file1">
+<div class="hint0 file1">
 src/Control/Monad/Trans/TreeT.hs:16:1: Error: Unused LANGUAGE pragma<br/>
 Found<br/>
 <pre><span class='hs-comment'>{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span></pre>
@@ -248,43 +244,7 @@ Why not remove it.<br/>
 
 </div>
 
-<div class="hint1 file2">
-src/Data/Bidistributable.hs:1:1: Error: Unused LANGUAGE pragma<br/>
-Found<br/>
-<pre><span class='hs-comment'>{-# LANGUAGE BangPatterns #-}</span></pre>
-Why not remove it.<br/>
-<pre></pre>
-
-</div>
-
-<div class="hint1 file2">
-src/Data/Bidistributable.hs:3:1: Error: Unused LANGUAGE pragma<br/>
-Found<br/>
-<pre><span class='hs-comment'>{-# LANGUAGE DeriveGeneric #-}</span></pre>
-Why not remove it.<br/>
-<pre></pre>
-
-</div>
-
-<div class="hint1 file2">
-src/Data/Bidistributable.hs:7:1: Error: Unused LANGUAGE pragma<br/>
-Found<br/>
-<pre><span class='hs-comment'>{-# LANGUAGE FunctionalDependencies #-}</span></pre>
-Why not remove it.<br/>
-<pre></pre>
-
-</div>
-
-<div class="hint1 file2">
-src/Data/Bidistributable.hs:9:1: Error: Unused LANGUAGE pragma<br/>
-Found<br/>
-<pre><span class='hs-comment'>{-# LANGUAGE KindSignatures #-}</span></pre>
-Why not remove it.<br/>
-<pre></pre>
-
-</div>
-
-<div class="hint4 file3">
+<div class="hint3 file2">
 src/Data/Flip.hs:263:32: Warning: Redundant bracket<br/>
 Found<br/>
 <pre><span class='hs-layout'>(</span><span class='hs-layout'>(</span><span class='hs-varop'>+</span> <span class='hs-varid'>x</span><span class='hs-layout'>)</span><span class='hs-layout'>,</span> <span class='hs-layout'>(</span><span class='hs-varid'>subtract</span> <span class='hs-varid'>x</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span></pre>
@@ -293,43 +253,7 @@ Why not<br/>
 
 </div>
 
-<div class="hint0 file5">
-src/Data/SwapList.hs:28:30: Error: Redundant bracket<br/>
-Found<br/>
-<pre><span class='hs-layout'>(</span><span class='hs-varid'>a</span><span class='hs-layout'>)</span></pre>
-Why not<br/>
-<pre><span class='hs-definition'>a</span></pre>
-
-</div>
-
-<div class="hint0 file5">
-src/Data/SwapList.hs:28:35: Error: Redundant bracket<br/>
-Found<br/>
-<pre><span class='hs-layout'>(</span><span class='hs-varid'>b</span><span class='hs-layout'>)</span></pre>
-Why not<br/>
-<pre><span class='hs-definition'>b</span></pre>
-
-</div>
-
-<div class="hint5 file5">
-src/Data/SwapList.hs:77:23: Warning: Use record patterns<br/>
-Found<br/>
-<pre><span class='hs-conid'>SwapLeft</span> <span class='hs-keyword'>_</span> <span class='hs-keyword'>_</span> <span class='hs-keyword'>_</span></pre>
-Why not<br/>
-<pre><span class='hs-conid'>SwapLeft</span><span class='hs-layout'>{</span><span class='hs-layout'>}</span></pre>
-
-</div>
-
-<div class="hint5 file5">
-src/Data/SwapList.hs:80:23: Warning: Use record patterns<br/>
-Found<br/>
-<pre><span class='hs-conid'>SwapRight</span> <span class='hs-keyword'>_</span> <span class='hs-keyword'>_</span> <span class='hs-keyword'>_</span></pre>
-Why not<br/>
-<pre><span class='hs-conid'>SwapRight</span><span class='hs-layout'>{</span><span class='hs-layout'>}</span></pre>
-
-</div>
-
-<div class="hint4 file4">
+<div class="hint3 file3">
 src/Data/Functor/Object.hs:19:30: Warning: Redundant bracket<br/>
 Found<br/>
 <pre><span class='hs-definition'>runAction</span> <span class='hs-keyglyph'>::</span> <span class='hs-layout'>(</span><span class='hs-varid'>f</span> <span class='hs-varid'>b</span> <span class='hs-layout'>(</span><span class='hs-conid'>Object</span> <span class='hs-varid'>f</span> <span class='hs-varid'>b</span> <span class='hs-varid'>c</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span></pre>

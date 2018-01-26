@@ -17,12 +17,8 @@ library
   hs-source-dirs:      src
   exposed-modules:     Control.Monad.Trans.TreeT
                      , Control.Arrow.Tree
-                     , Control.Monad.Trans.Rope
-                     , Data.Bidistributable
                      , Data.Flip
                      , Data.Functor.Object
-                     , Data.Rope
-                     , Data.SwapList
   build-depends:       base >= 4.9 && < 5
                      , QuickCheck
                      , bifunctors
