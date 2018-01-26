@@ -1,0 +1,7 @@
+[?25l[2J[1;1H[1mUnused: [0manalyzing [32m373[0m terms
+
+Calculating cache fingerprint... 
+[2J[1;1H[1mUnused: [0manalyzing [32m373[0m terms
+
+[2J[1;1H[2J[1;1H[32m[1mUnused found no results
+[0m[?25h
