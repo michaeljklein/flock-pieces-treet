@@ -1,19 +1,10 @@
--- {-# LANGUAGE AllowAmbiguousTypes #-}
--- {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
--- {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
--- {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
--- {-# LANGUAGE RankNTypes #-}
--- {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
--- {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
--- {-# LANGUAGE DeriveFunctor #-}
--- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Control.Monad.Trans.TreeT where
 
@@ -32,6 +23,7 @@ import Data.Monoid ((<>))
 import Data.Semigroup hiding ((<>))
 import GHC.Generics (Generic)
 import Prelude hiding (fail, id, (.))
+import Control.Comonad.Cofree (Cofree(..))
 
 
 -- | A Generalized tree type
@@ -78,6 +70,21 @@ newtype Tree   m a = Tree   { getTree   :: (a, Forest m a) } deriving (Generic)
 
 -- | The counterpart to `Tree`
 newtype Forest m a = Forest { getForest :: m (Tree m a) }    deriving (Generic)
+
+
+
+treeToCofree :: Functor m => Tree m a -> Cofree m a
+treeToCofree (Tree ~(x, xs)) = x :< forestToCofree xs
+
+cofreeToTree :: Functor m => Cofree m a -> Tree m a
+cofreeToTree ~(x :< xs) = Tree (x, cofreeToForest xs)
+
+
+forestToCofree :: Functor m => Forest m a -> m (Cofree m a)
+forestToCofree = fmap treeToCofree . getForest
+
+cofreeToForest :: Functor m => m (Cofree m a) -> Forest m a
+cofreeToForest = Forest . fmap cofreeToTree
 
 
 
