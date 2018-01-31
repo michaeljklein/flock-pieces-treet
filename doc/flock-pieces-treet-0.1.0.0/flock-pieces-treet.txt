@@ -7,6 +7,98 @@
 
 module Control.Monad.Trans.TreeT
 
+-- | A Generalized tree type
+--   
+--   Question: does any property such that
+--   
+--   <pre>
+--   Prop :: * -&gt; Constraint
+--     Prop a
+--       =&gt; Prop (Tree Identity a)?
+--     Prop a, Prop a + Prop b =&gt; Prop (a, b), Prop a =&gt; Prop (m a)
+--       =&gt; Prop (Tree m a)?
+--     Prop a =&gt; Prop (m a)
+--       =&gt; Prop (Tree m a)?
+--   Prop :: (* -&gt; *) -&gt; Constraint
+--     Prop Identity, Prop a + Prop b =&gt; Prop (a :*: b), Prop m
+--       =&gt; Prop (Tree m)?
+--     Prop m
+--       =&gt; Prop (Forest m)?
+--   Prop :: (* -&gt; * -&gt; *) -&gt; Constraint
+--     Prop (,), Prop t
+--       =&gt; Prop (ATree t m)?
+--     Prop t
+--       =&gt; Prop (AForest t m)?
+--   </pre>
+--   
+--   E.g.
+--   
+--   <pre>
+--   instance Alternative m =&gt; Alternative (Forest m)@
+--   </pre>
+--   
+--   But no instance for <tt><a>Tree</a> m</tt>
+--   
+--   E.g.
+--   
+--   <pre>
+--   instance Functor m =&gt; Comonad (Tree m)
+--   </pre>
+--   
+--   But no instance for <tt><a>Forest</a> m</tt>
+newtype Tree m a
+Tree :: (a, Forest m a) -> Tree m a
+[getTree] :: Tree m a -> (a, Forest m a)
+
+-- | The counterpart to <a>Tree</a>
+newtype Forest m a
+Forest :: m (Tree m a) -> Forest m a
+[getForest] :: Forest m a -> m (Tree m a)
+treeToCofree :: Functor m => Tree m a -> Cofree m a
+cofreeToTree :: Functor m => Cofree m a -> Tree m a
+forestToCofree :: Functor m => Forest m a -> m (Cofree m a)
+cofreeToForest :: Functor m => m (Cofree m a) -> Forest m a
+
+-- | <a>Tree</a> is not a monad transformer, but <tt><a>Tree</a> . m</tt>
+--   is, for <tt><a>Monad</a> m</tt>
+liftTree :: Monad m => m a -> m (Tree m a)
+
+-- | Push a monadic context into a <a>Forest</a> by binding it and
+--   unwrapping the forest.
+--   
+--   It should be equivalent to:
+--   
+--   <pre>
+--   Forest . join . fmap getForest
+--   Forest .        (&gt;&gt;= getForest)
+--   </pre>
+
+-- | Note that <a>Tree</a> can only be <a>Alternative</a> with constraints
+--   on <tt>a</tt>, so it can't be <a>Alternative</a> in Haskell
+
+-- | Pull out a layer of monadic context from a <a>Forest</a>.
+--   
+--   Not sure, but I think that the only inhabitants of this type can:
+--   
+--   <ul>
+--   <li>return the original</li>
+--   <li>do this</li>
+--   <li>swap two <a>Tree</a> values</li>
+--   <li>some combination of the above</li>
+--   </ul>
+pullM :: Functor m => Forest m a -> m (Forest m a)
+
+-- | <a>pullM</a> and <a>extract</a>
+pullMa :: Functor m => Forest m a -> m a
+
+-- | Unfold a <a>Tree</a> from a seed value
+unfoldTree :: Functor m => (b -> (a, m b)) -> b -> Tree m a
+
+-- | Unfold a <a>Forest</a> from a seed value
+unfoldForest :: Functor m => (b -> m (a, b)) -> b -> Forest m a
+iterateTree :: Applicative m => (a -> m a) -> a -> m (Tree m a)
+iterateForest :: Applicative m => (a -> m a) -> a -> Forest m a
+
 -- | Algebraic notes:
 --   
 --   <pre>
@@ -269,71 +361,6 @@ ttDefinition :: ()
 --   </pre>
 freeAndCofree :: ()
 
--- | A Generalized tree type
---   
---   Question: does any property such that
---   
---   <pre>
---   Prop :: * -&gt; Constraint
---     Prop a
---       =&gt; Prop (Tree Identity a)?
---     Prop a, Prop a + Prop b =&gt; Prop (a, b), Prop a =&gt; Prop (m a)
---       =&gt; Prop (Tree m a)?
---     Prop a =&gt; Prop (m a)
---       =&gt; Prop (Tree m a)?
---   Prop :: (* -&gt; *) -&gt; Constraint
---     Prop Identity, Prop a + Prop b =&gt; Prop (a :*: b), Prop m
---       =&gt; Prop (Tree m)?
---     Prop m
---       =&gt; Prop (Forest m)?
---   Prop :: (* -&gt; * -&gt; *) -&gt; Constraint
---     Prop (,), Prop t
---       =&gt; Prop (ATree t m)?
---     Prop t
---       =&gt; Prop (AForest t m)?
---   </pre>
---   
---   E.g.
---   
---   <pre>
---   instance Alternative m =&gt; Alternative (Forest m)@
---   </pre>
---   
---   But no instance for <tt><a>Tree</a> m</tt>
---   
---   E.g.
---   
---   <pre>
---   instance Functor m =&gt; Comonad (Tree m)
---   </pre>
---   
---   But no instance for <tt><a>Forest</a> m</tt>
-newtype Tree m a
-Tree :: (a, Forest m a) -> Tree m a
-[getTree] :: Tree m a -> (a, Forest m a)
-
--- | The counterpart to <a>Tree</a>
-newtype Forest m a
-Forest :: m (Tree m a) -> Forest m a
-[getForest] :: Forest m a -> m (Tree m a)
-
--- | <a>Tree</a> is not a monad transformer, but <tt><a>Tree</a> . m</tt>
---   is, for <tt><a>Monad</a> m</tt>
-liftTree :: Monad m => m a -> m (Tree m a)
-
--- | Push a monadic context into a <a>Forest</a> by binding it and
---   unwrapping the forest.
---   
---   It should be equivalent to:
---   
---   <pre>
---   Forest . join . fmap getForest
---   Forest .        (&gt;&gt;= getForest)
---   </pre>
-
--- | Note that <a>Tree</a> can only be <a>Alternative</a> with constraints
---   on <tt>a</tt>, so it can't be <a>Alternative</a> in Haskell
-
 -- | Lift an <a>Enum</a> to a <a>Tree</a> type where the outermost is
 --   first?
 --   
@@ -373,29 +400,6 @@ liftTree :: Monad m => m a -> m (Tree m a)
 --   enumFromThenToM :: a -&gt; a -&gt; a -&gt; [a]
 --   </pre>
 ideaInstanceEnum :: ()
-
--- | Pull out a layer of monadic context from a <a>Forest</a>.
---   
---   Not sure, but I think that the only inhabitants of this type can:
---   
---   <ul>
---   <li>return the original</li>
---   <li>do this</li>
---   <li>swap two <a>Tree</a> values</li>
---   <li>some combination of the above</li>
---   </ul>
-pullM :: Functor m => Forest m a -> m (Forest m a)
-
--- | <a>pullM</a> and <a>extract</a>
-pullMa :: Functor m => Forest m a -> m a
-
--- | Unfold a <a>Tree</a> from a seed value
-unfoldTree :: Functor m => (b -> (a, m b)) -> b -> Tree m a
-
--- | Unfold a <a>Forest</a> from a seed value
-unfoldForest :: Functor m => (b -> m (a, b)) -> b -> Forest m a
-iterateTree :: Applicative m => (a -> m a) -> a -> m (Tree m a)
-iterateForest :: Applicative m => (a -> m a) -> a -> Forest m a
 instance GHC.Generics.Generic (Control.Monad.Trans.TreeT.Tree m a)
 instance GHC.Generics.Generic (Control.Monad.Trans.TreeT.Forest m a)
 instance GHC.Base.Functor m => GHC.Base.Functor (Control.Monad.Trans.TreeT.Tree m)
@@ -560,35 +564,11 @@ transIdForest2 :: Arrow t => t a (a, Forest (t a) a) -> t a (Tree (t a) a)
 -- | Coerced all the way up to <a>idForest</a>
 idForest2 :: Arrow t => t a (a, Forest (t a) a)
 
--- | <a>undefined</a>
-forestInv :: (Arrow t, Groupoid t) => AForest t a b -> AForest t b a
-
--- | <a>undefined</a>
-forestInv1 :: (Arrow t, Groupoid t) => Forest (t a) b -> Forest (t b) a
-
--- | <a>undefined</a>
-forestInv2 :: (Arrow t, Groupoid t) => t a (Tree (t a) b) -> t b (Tree (t b) a)
-
--- | <a>undefined</a>
-swaps :: Arrow t => t a (Tree (t a) b) -> t (Tree (t b) a) b
-
--- | <a>undefined</a>
-swaps1 :: Arrow t => t a (b, Forest (t a) b) -> t (a, Forest (t b) a) b
-
--- | <a>undefined</a>. Ok, I'm convinced that this needs Groupoid
-swaps2 :: Arrow t => t a (b, t a (Tree (t a) b)) -> t (a, t b (Tree (t b) a)) b
-
--- | <pre>
---   <a>inv</a> = <a>forestInv</a>
---   </pre>
-
 -- | <tt>`(.)` = <a>laog'</a></tt>, <tt><a>id</a> = <a>idForest'</a></tt>
 
 -- | <pre>
 --   <a>o</a> = <a>goal'</a>
 --   </pre>
-
--- | This also looks a lot like distribution.. (<a>undefined</a>)
 
 -- | Notes on Data.Bifoldable, Data.Bitraversable, etc:
 --   
@@ -623,25 +603,6 @@ swaps2 :: Arrow t => t a (b, t a (Tree (t a) b)) -> t (a, t b (Tree (t b) a)) b
 bifoldableNotes :: ()
 
 -- | This looks a lot like distribution
-
--- | This is harder than I thought, might be impossible, probably
---   impossible.
---   
---   Try extending <tt>Choice (ATree t)</tt> to not use <tt>Choice (AForest
---   t)</tt>.
---   
---   (Currently, both are <a>undefined</a>.)
-
--- | REQUIRES DISTRIBUTION: distribute :: Functor f =&gt; f (g a) -&gt; g
---   (f a), Functor f =&gt; f (Tree m a) -&gt; Tree m (f a)
-
--- | <a>undefined</a>
-wantTo :: AForest t a (ATree t a b) -> AForest t (ATree t a b) b
-
--- | <a>undefined</a>
-wantFrom :: AForest t (ATree t a b) b -> AForest t a (ATree t a b)
-
--- | Impossible instance, no way to convert <tt>a</tt> to <tt>b</tt>.
 
 -- | Re-associate a tuple
 sndIn :: ((a, b), c) -> ((a, c), b)
@@ -717,23 +678,82 @@ instance GHC.Generics.Generic (Control.Arrow.Tree.AForest t a b)
 instance GHC.Generics.Generic1 (Control.Arrow.Tree.ATree t a)
 instance GHC.Generics.Generic (Control.Arrow.Tree.ATree t a b)
 instance Control.Arrow.Arrow t => Data.Semigroupoid.Semigroupoid (Control.Arrow.Tree.AForest t)
-instance (Control.Arrow.Arrow t, Data.Groupoid.Groupoid t) => Data.Groupoid.Groupoid (Control.Arrow.Tree.AForest t)
 instance Control.Arrow.Arrow t => Control.Category.Category (Control.Arrow.Tree.AForest t)
 instance GHC.Base.Functor (t a) => GHC.Base.Functor (Control.Arrow.Tree.AForest t a)
 instance Data.Bifunctor.Bifunctor t => Data.Bifunctor.Bifunctor (Control.Arrow.Tree.ATree t)
 instance Data.Bifunctor.Bifunctor t => Data.Bifunctor.Bifunctor (Control.Arrow.Tree.AForest t)
-instance Data.Biapplicative.Biapplicative t => Data.Biapplicative.Biapplicative (Control.Arrow.Tree.ATree t)
-instance Data.Biapplicative.Biapplicative t => Data.Biapplicative.Biapplicative (Control.Arrow.Tree.AForest t)
 instance Data.Profunctor.Unsafe.Profunctor t => Data.Profunctor.Unsafe.Profunctor (Control.Arrow.Tree.ATree t)
 instance Data.Profunctor.Unsafe.Profunctor t => Data.Profunctor.Unsafe.Profunctor (Control.Arrow.Tree.AForest t)
 instance Data.Profunctor.Strong.Strong t => Data.Profunctor.Strong.Strong (Control.Arrow.Tree.AForest t)
-instance Data.Profunctor.Choice.Choice t => Data.Profunctor.Choice.Choice (Control.Arrow.Tree.ATree t)
+instance Control.Arrow.Arrow t => Data.Semigroupoid.Semigroupoid (Control.Arrow.Tree.ATree t)
+instance GHC.Base.Functor (t a) => GHC.Base.Functor (Control.Arrow.Tree.ATree t a)
+
+module Control.Arrow.Tree.Experimental
+
+-- | <pre>
+--   <a>inv</a> = <a>forestInv</a>
+--   </pre>
+
+-- | <a>undefined</a>
+forestInv :: (Arrow t, Groupoid t) => AForest t a b -> AForest t b a
+
+-- | <a>undefined</a>
+forestInv1 :: (Arrow t, Groupoid t) => Forest (t a) b -> Forest (t b) a
+
+-- | <a>undefined</a>
+forestInv2 :: (Arrow t, Groupoid t) => t a (Tree (t a) b) -> t b (Tree (t b) a)
+
+-- | <a>undefined</a>
+swaps :: Arrow t => t a (Tree (t a) b) -> t (Tree (t b) a) b
+
+-- | <a>undefined</a>
+swaps1 :: Arrow t => t a (b, Forest (t a) b) -> t (a, Forest (t b) a) b
+
+-- | <a>undefined</a>. Ok, I'm convinced that this needs Groupoid
+swaps2 :: Arrow t => t a (b, t a (Tree (t a) b)) -> t (a, t b (Tree (t b) a)) b
+
+-- | This also looks a lot like distribution.. (<a>undefined</a>)
+
+-- | This is harder than I thought, might be impossible, probably
+--   impossible.
+--   
+--   Try extending <tt>Choice (ATree t)</tt> to not use <tt>Choice (AForest
+--   t)</tt>.
+--   
+--   (Currently, both are <a>undefined</a>.)
+
+-- | REQUIRES DISTRIBUTION: distribute :: Functor f =&gt; f (g a) -&gt; g
+--   (f a), Functor f =&gt; f (Tree m a) -&gt; Tree m (f a)
+
+-- | <a>undefined</a>
+wantTo :: AForest t a (ATree t a b) -> AForest t (ATree t a b) b
+
+-- | <a>undefined</a>
+wantFrom :: AForest t (ATree t a b) b -> AForest t a (ATree t a b)
+
+-- | Impossible instance, no way to convert <tt>a</tt> to <tt>b</tt>.
+instance (Control.Arrow.Arrow t, Data.Groupoid.Groupoid t) => Data.Groupoid.Groupoid (Control.Arrow.Tree.AForest t)
+instance Data.Biapplicative.Biapplicative t => Data.Biapplicative.Biapplicative (Control.Arrow.Tree.ATree t)
+instance Data.Biapplicative.Biapplicative t => Data.Biapplicative.Biapplicative (Control.Arrow.Tree.AForest t)
 instance Data.Profunctor.Choice.Choice t => Data.Profunctor.Choice.Choice (Control.Arrow.Tree.AForest t)
 instance Data.Profunctor.Closed.Closed t => Data.Profunctor.Closed.Closed (Control.Arrow.Tree.ATree t)
 instance Data.Profunctor.Closed.Closed t => Data.Profunctor.Closed.Closed (Control.Arrow.Tree.AForest t)
-instance Control.Arrow.Arrow t => Data.Semigroupoid.Semigroupoid (Control.Arrow.Tree.ATree t)
-instance GHC.Base.Functor (t a) => GHC.Base.Functor (Control.Arrow.Tree.ATree t a)
 instance (Control.Arrow.Arrow t, Data.Groupoid.Groupoid t, (TypeError ...)) => Data.Groupoid.Groupoid (Control.Arrow.Tree.ATree t)
+instance Data.Profunctor.Choice.Choice t => Data.Profunctor.Choice.Choice (Control.Arrow.Tree.ATree t)
+
+module Data.Fix
+
+-- | Simple fixed point newtype
+newtype Fix f
+Fix :: f (Fix f) -> Fix f
+[runFix] :: Fix f -> f (Fix f)
+
+-- | Convert a <a>Fix</a> to an infinite list
+fixList :: Fix ((,) a) -> [a]
+
+-- | Warning: produces an infinite <a>String</a>
+instance GHC.Generics.Generic (Data.Fix.Fix f)
+instance GHC.Show.Show a => GHC.Show.Show (Data.Fix.Fix ((,) a))
 
 module Data.Flip
 
@@ -956,7 +976,12 @@ instance Control.Comonad.Comonad (Data.Flip.F4 a b)
 
 module Data.Functor.Object
 
--- | Both a right result and a continuation (<a>Action</a>)
+-- | Both a right result and a continuation (<a>Action</a>).
+--   
+--   Note: I was unable to derive an instance of <a>Generic1</a>: <tt>
+--   Can't make a derived instance of ‘Generic1 (Object f b)’: Constructor
+--   ‘Object’ applies a type to an argument involving the last parameter
+--   but the applied type is not of kind * -&gt; * </tt>
 data Object f b c
 Object :: (c, Action f b c) -> Object f b c
 [getObject] :: Object f b c -> (c, Action f b c)
@@ -964,29 +989,16 @@ Object :: (c, Action f b c) -> Object f b c
 -- | An action which could contain a left result, continuation
 --   (<a>Object</a>)
 data Action f b c
-Action :: (f b (Object f b c)) -> Action f b c
-[runAction] :: Action f b c -> (f b (Object f b c))
-
--- | Simple fixed point newtype
-newtype Fix f
-Fix :: f (Fix f) -> Fix f
-[runFix] :: Fix f -> f (Fix f)
+Action :: f b (Object f b c) -> Action f b c
+[runAction] :: Action f b c -> f b (Object f b c)
 
 -- | Cycle a pair, resulting in a fixed point
 cyclePair :: Object (,) a b -> Fix ((,) (a, b))
 
--- | Convert a <a>Fix</a> to an infinite list
-fixList :: Fix ((,) a) -> [a]
-
--- | <a>Object</a>, but with a sum (<a>Either</a>) instead of a tuple
-data Result f b c
-Result :: Either c (Effect f b c) -> Result f b c
-[getResult] :: Result f b c -> Either c (Effect f b c)
-
--- | <a>Action</a>, but with a sum (<a>Either</a>) instead of a tuple
-data Effect f b c
-Effect :: f b (Result f b c) -> Effect f b c
-[runEffect] :: Effect f b c -> f b (Result f b c)
+-- | <pre>
+--   <a>fixList</a> . <a>cyclePair</a>
+--   </pre>
+cyclePairList :: Object (,) a b -> [(a, b)]
 
 -- | Given all the functional pairs to define a function, we can cyclically
 --   wrap the pairs into an <a>Action</a> over pairs.
@@ -1008,12 +1020,6 @@ sndIsh :: NonEmpty a -> NonEmpty b -> Action (,) (a, b) b
 -- | Since there's only a finite number of a's, we can cycle through til we
 --   match, then continue on
 appIsh :: (Eq a, Functor (f t)) => Action (,) a b -> Object f t a -> Object f t b
-
--- | Convert a flipped result to an either (sum)
-toEither :: Flip (Result (Flip (Object f))) c b -> Either c b
-
--- | Convert a flipped result to a tuple (product)
-toPair :: Flip (Object (Flip (Object f))) c b -> (c, b)
 
 -- | Undo an <a>Action</a>
 unAction :: Functor (f b) => Action f b c -> f b c
@@ -1050,11 +1056,36 @@ mapEitherAction :: Functor (f (c -> d, Either b c)) => f (c -> d, Either b c) (E
 
 -- | <a>toObject</a>
 mapEitherObject :: Functor (f (c -> d, Either b c)) => f (c -> d, Either b c) (Either b d) -> Either b d -> Object f (c -> d, Either b c) (Either b d)
-instance GHC.Generics.Generic (Data.Functor.Object.Fix f)
-instance GHC.Base.Functor (f b) => GHC.Base.Functor (Data.Functor.Object.Result f b)
-instance GHC.Base.Functor (f b) => GHC.Base.Functor (Data.Functor.Object.Effect f b)
-instance GHC.Show.Show a => GHC.Show.Show (Data.Functor.Object.Fix ((,) a))
+instance GHC.Generics.Generic (Data.Functor.Object.Object f b c)
+instance GHC.Generics.Generic (Data.Functor.Object.Action f b c)
+instance GHC.Base.Functor (f b) => GHC.Generics.Generic1 (Data.Functor.Object.Action f b)
 instance GHC.Base.Functor (f b) => GHC.Base.Functor (Data.Functor.Object.Object f b)
 instance GHC.Base.Functor (f b) => GHC.Base.Functor (Data.Functor.Object.Action f b)
 instance Control.Comonad.Comonad (f b) => Control.Comonad.Comonad (Data.Functor.Object.Object f b)
 instance Control.Comonad.Comonad (f b) => Control.Comonad.Comonad (Data.Functor.Object.Action f b)
+
+module Data.Functor.Result
+
+-- | <tt>Object</tt>, but with a sum (<a>Either</a>) instead of a tuple
+data Result f b c
+Result :: Either c (Effect f b c) -> Result f b c
+[getResult] :: Result f b c -> Either c (Effect f b c)
+
+-- | <tt>Action</tt>, but with a sum (<a>Either</a>) instead of a tuple
+data Effect f b c
+Effect :: f b (Result f b c) -> Effect f b c
+[runEffect] :: Effect f b c -> f b (Result f b c)
+
+-- | Note that while both <a>Result</a> and <a>Effect</a> require
+--   <a>Applicative</a> for an <a>Applicative</a> instance, <a>Result</a>
+--   only needs a <a>Functor</a> instance to implement <a>&gt;&gt;=</a>.
+
+-- | Note: while this function has a simple type, if the <a>Result</a>
+--   cycles this functions result will be bottom
+cycleSum :: Result Either a b -> Either a b
+instance GHC.Base.Functor (f b) => GHC.Base.Functor (Data.Functor.Result.Result f b)
+instance GHC.Base.Functor (f b) => GHC.Base.Functor (Data.Functor.Result.Effect f b)
+instance GHC.Base.Applicative (f b) => GHC.Base.Applicative (Data.Functor.Result.Result f b)
+instance GHC.Base.Applicative (f b) => GHC.Base.Applicative (Data.Functor.Result.Effect f b)
+instance GHC.Base.Applicative (f b) => GHC.Base.Monad (Data.Functor.Result.Result f b)
+instance GHC.Base.Monad (f b) => GHC.Base.Monad (Data.Functor.Result.Effect f b)

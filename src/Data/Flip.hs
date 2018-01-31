@@ -260,7 +260,7 @@ instance Show (SomeIso a b) where
 
 -- | Unsigned integer addition is an inverse to subtraction
 instance Arbitrary (SomeIso Word Word) where
-  arbitrary = SomeIso . (\x -> ((+ x), (subtract x))) <$> arbitrary
+  arbitrary = SomeIso . liftM2 (,) (+) subtract <$> arbitrary
 
 
 -- | Test `IsoFunctor`

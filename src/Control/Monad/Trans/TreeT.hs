@@ -1,19 +1,10 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Control.Monad.Trans.TreeT where
 
@@ -32,6 +23,347 @@ import Data.Monoid ((<>))
 import Data.Semigroup hiding ((<>))
 import GHC.Generics (Generic)
 import Prelude hiding (fail, id, (.))
+import Control.Comonad.Cofree (Cofree(..))
+
+
+-- | A Generalized tree type
+--
+-- Question: does any property such that
+--
+-- @
+--   Prop :: * -> Constraint
+--     Prop a
+--       => Prop (Tree Identity a)?
+--     Prop a, Prop a + Prop b => Prop (a, b), Prop a => Prop (m a)
+--       => Prop (Tree m a)?
+--     Prop a => Prop (m a)
+--       => Prop (Tree m a)?
+--   Prop :: (* -> *) -> Constraint
+--     Prop Identity, Prop a + Prop b => Prop (a :*: b), Prop m
+--       => Prop (Tree m)?
+--     Prop m
+--       => Prop (Forest m)?
+--   Prop :: (* -> * -> *) -> Constraint
+--     Prop (,), Prop t
+--       => Prop (ATree t m)?
+--     Prop t
+--       => Prop (AForest t m)?
+-- @
+--
+-- E.g.
+--
+-- @
+--  instance Alternative m => Alternative (Forest m)@
+-- @
+--
+-- But no instance for @`Tree` m@
+--
+-- E.g.
+--
+-- @
+--  instance Functor m => Comonad (Tree m)
+-- @
+--
+-- But no instance for @`Forest` m@
+--
+newtype Tree   m a = Tree   { getTree   :: (a, Forest m a) } deriving (Generic)
+
+-- | The counterpart to `Tree`
+newtype Forest m a = Forest { getForest :: m (Tree m a) }    deriving (Generic)
+
+
+
+treeToCofree :: Functor m => Tree m a -> Cofree m a
+treeToCofree (Tree ~(x, xs)) = x :< forestToCofree xs
+
+cofreeToTree :: Functor m => Cofree m a -> Tree m a
+cofreeToTree ~(x :< xs) = Tree (x, cofreeToForest xs)
+
+
+forestToCofree :: Functor m => Forest m a -> m (Cofree m a)
+forestToCofree = fmap treeToCofree . getForest
+
+cofreeToForest :: Functor m => m (Cofree m a) -> Forest m a
+cofreeToForest = Forest . fmap cofreeToTree
+
+
+
+instance Functor m => Functor (Tree m) where
+  fmap :: (a -> b) -> Tree m a -> Tree m b
+  fmap f (Tree (x, xs)) = Tree (f x, fmap f xs)
+
+instance Functor m => Functor (Forest m) where
+  fmap :: (a -> b) -> Forest m a -> Forest m b
+  fmap f (Forest x) = Forest (fmap f <$> x)
+
+
+instance Applicative m => Applicative (Tree m) where
+  pure :: a -> Tree m a
+  pure x = Tree (x, pure x)
+
+  (<*>) :: Tree m (a -> b) -> Tree m a -> Tree m b
+  Tree (f, fs) <*> Tree (x, xs) = Tree (f x, fs <*> xs)
+
+instance Applicative m => Applicative (Forest m) where
+  pure :: a -> Forest m a
+  pure x = Forest (pure (pure x))
+
+  (<*>) :: Forest m (a -> b) -> Forest m a -> Forest m b
+  Forest fs <*> Forest xs = Forest (liftA2 (<*>) fs xs)
+
+
+instance Monad m => Monad (Tree m) where
+  return :: a -> Tree m a
+  return x = Tree (x, pure x)
+
+  (>>=) :: Tree m a -> (a -> Tree m b) -> Tree m b
+  Tree (x, _) >>= f = f x
+
+
+instance Monad m => Monad (Forest m) where
+  return :: a -> Forest m a
+  return x = Forest (return (return x))
+
+  (>>=) :: Forest m a -> (a -> Forest m b) -> Forest m b
+  Forest xs >>= f = Forest (join (getForest . f . extract <$> xs))
+
+
+instance Functor m => Comonad (Tree m) where
+  extract :: Tree m a -> a
+  extract (Tree (x, _)) = x
+
+  duplicate :: Tree m a -> Tree m (Tree m a)
+  duplicate (Tree (x, Forest xs)) = Tree (Tree (x, Forest xs), Forest (duplicate <$> xs))
+
+
+instance Applicative m => ComonadApply (Tree m) where
+  (<@>) :: Tree m (a -> b) -> Tree m a -> Tree m b
+  Tree (f, fs) <@> Tree (x, xs) = Tree (f x, fs <*> xs)
+
+
+instance MonadTrans Forest where
+  lift :: Monad m => m a -> Forest m a
+  lift = Forest . fmap return
+
+
+instance MonadIO m => MonadIO (Forest m) where
+  liftIO :: IO a -> Forest m a
+  liftIO = lift . liftIO
+
+
+instance MonadState s m => MonadState s (Forest m) where
+  get = lift get
+  put = lift . put
+  state = lift . state
+
+
+instance ComonadTrans Tree where
+  lower :: Comonad w => Tree w a -> w a
+  lower = lower . snd . getTree
+
+
+instance ComonadTrans Forest where
+  lower :: Comonad w => Forest w a -> w a
+  lower = fmap extract . getForest
+
+
+instance Eq1 t => Eq1 (Tree t) where
+  liftEq f (Tree (x, xs)) (Tree (y, ys)) = f x y && liftEq f xs ys
+
+instance Eq1 t => Eq1 (Forest t) where
+  liftEq f (Forest xs) (Forest ys) = liftEq (liftEq f) xs ys
+
+
+instance Ord1 t => Ord1 (Tree t) where
+  liftCompare f (Tree (x, xs)) (Tree (y, ys)) = f x y <> liftCompare f xs ys
+
+instance Ord1 t => Ord1 (Forest t) where
+  liftCompare f (Forest xs) (Forest ys) = liftCompare (liftCompare f) xs ys
+
+
+-- | `Tree` is not a monad transformer, but @`Tree` . m@ is, for @`Monad` m@
+liftTree :: Monad m => m a -> m (Tree m a)
+liftTree x = Tree <$> fmap (, lift x) x
+
+
+-- | Push a monadic context into a `Forest` by binding it and unwrapping the forest.
+--
+-- It should be equivalent to:
+--
+-- @
+--  Forest . join . fmap getForest
+--  Forest .        (>>= getForest)
+-- @
+--
+instance Monad m => MonadFree m (Forest m) where
+  wrap :: m (Forest m a) -> Forest m a
+  wrap fs = Forest (fs >>= getForest)
+
+
+instance (Monoid a, Applicative m) => Monoid (Tree m a) where
+  mempty = Tree (mempty, pure mempty)
+  mappend (Tree (x, xs)) (Tree (y, ys)) = Tree (mappend x y, liftA2 mappend xs ys)
+
+instance (Monoid a, Applicative m) => Monoid (Forest m a) where
+  mempty = Forest (pure mempty)
+  mappend (Forest xs) (Forest ys) = Forest (liftA2 mappend xs ys)
+
+
+instance (Monoid a, Applicative m) => Semigroup (Tree m a)
+instance (Monoid a, Applicative m) => Semigroup (Forest m a)
+
+
+-- | Note that `Tree` can only be `Alternative` with constraints on @a@, so it
+-- can't be `Alternative` in Haskell
+instance Alternative m => Alternative (Forest m) where
+  empty = Forest empty
+  Forest xs <|> Forest ys = Forest (xs <|> ys)
+
+
+instance PrimMonad m => PrimMonad (Forest m) where
+  type PrimState (Forest m) = PrimState m
+
+  primitive = lift . primitive
+
+
+instance PrimBase m => PrimBase (Forest m) where
+  internal = internal . pullMa
+
+
+instance Foldable m => Foldable (Tree m) where
+  foldr f y (Tree (x, xs)) = foldr f (f x y) xs
+
+instance Foldable m => Foldable (Forest m) where
+  foldr f y (Forest xs) = foldr (flip (foldr f)) y xs
+
+
+instance Traversable m => Traversable (Tree m) where
+  traverse f (Tree (x, xs)) = Tree <$> liftA2 (,) (f x) (traverse f xs)
+
+  mapM f (Tree (x, xs)) = Tree <$> liftM2 (,) (f x) (mapM f xs)
+
+instance Traversable m => Traversable (Forest m) where
+  traverse f (Forest xs) = Forest <$> traverse (traverse f) xs
+
+  mapM f (Forest xs) = Forest <$> mapM (mapM f) xs
+
+
+
+instance (Applicative m, Num a) => Num (Tree m a) where
+  Tree (x, xs) + Tree (y, ys) = Tree (x + y, xs + ys)
+  Tree (x, xs) * Tree (y, ys) = Tree (x * y, xs * ys)
+  Tree (x, xs) - Tree (y, ys) = Tree (x - y, xs - ys)
+
+  negate (Tree (x, xs)) = Tree (negate x, negate xs)
+  abs    (Tree (x, xs)) = Tree (abs    x, abs    xs)
+  signum (Tree (x, xs)) = Tree (signum x, signum xs)
+
+  fromInteger x = Tree (fromInteger x, fromInteger x)
+
+
+instance (Applicative m, Num a) => Num (Forest m a) where
+  Forest xs + Forest ys = Forest (liftA2 (+) xs ys)
+  Forest xs * Forest ys = Forest (liftA2 (*) xs ys)
+  Forest xs - Forest ys = Forest (liftA2 (-) xs ys)
+
+  negate (Forest xs) = Forest (negate <$> xs)
+  abs    (Forest xs) = Forest (abs    <$> xs)
+  signum (Forest xs) = Forest (signum <$> xs)
+
+  fromInteger x = Forest (pure (fromInteger x))
+
+
+instance (Applicative m, Fractional a) => Fractional (Tree m a) where
+  Tree (x, xs) / Tree (y, ys) = Tree (x / y, xs / ys)
+  recip (Tree (x, xs)) = Tree (recip x, recip xs)
+  fromRational x = Tree (fromRational x, fromRational x)
+
+instance (Applicative m, Fractional a) => Fractional (Forest m a) where
+  Forest xs / Forest ys = Forest (liftA2 (/) xs ys)
+  recip (Forest xs) = Forest (recip <$> xs)
+  fromRational x = Forest (pure (fromRational x))
+
+
+instance (Applicative m, Floating a) => Floating (Tree m a) where
+  pi = Tree (pi, pi)
+
+  Tree (x, xs) ** Tree (y, ys) = Tree (x ** y, xs ** ys)
+  logBase (Tree (x, xs)) (Tree (y, ys)) = Tree (logBase x y, logBase xs ys)
+
+  exp (Tree (x, xs)) = Tree (exp x, exp xs)
+  log (Tree (x, xs)) = Tree (log x, log xs)
+  sqrt (Tree (x, xs)) = Tree (sqrt x, sqrt xs)
+  sin (Tree (x, xs)) = Tree (sin x, sin xs)
+  cos (Tree (x, xs)) = Tree (cos x, cos xs)
+  tan (Tree (x, xs)) = Tree (tan x, tan xs)
+  asin (Tree (x, xs)) = Tree (asin x, asin xs)
+  acos (Tree (x, xs)) = Tree (acos x, acos xs)
+  atan (Tree (x, xs)) = Tree (atan x, atan xs)
+  sinh (Tree (x, xs)) = Tree (sinh x, sinh xs)
+  cosh (Tree (x, xs)) = Tree (cosh x, cosh xs)
+  tanh (Tree (x, xs)) = Tree (tanh x, tanh xs)
+  asinh (Tree (x, xs)) = Tree (asinh x, asinh xs)
+  acosh (Tree (x, xs)) = Tree (acosh x, acosh xs)
+  atanh (Tree (x, xs)) = Tree (atanh x, atanh xs)
+
+
+instance (Applicative m, Floating a) => Floating (Forest m a) where
+  pi = Forest (pure pi)
+
+  Forest xs ** Forest ys = Forest (liftA2 (**) xs ys)
+  logBase (Forest xs) (Forest ys) = Forest (liftA2 logBase xs ys)
+
+  exp (Forest xs) = Forest (exp <$> xs)
+  log (Forest xs) = Forest (log <$> xs)
+  sqrt (Forest xs) = Forest (sqrt <$> xs)
+  sin (Forest xs) = Forest (sin <$> xs)
+  cos (Forest xs) = Forest (cos <$> xs)
+  tan (Forest xs) = Forest (tan <$> xs)
+  asin (Forest xs) = Forest (asin <$> xs)
+  acos (Forest xs) = Forest (acos <$> xs)
+  atan (Forest xs) = Forest (atan <$> xs)
+  sinh (Forest xs) = Forest (sinh <$> xs)
+  cosh (Forest xs) = Forest (cosh <$> xs)
+  tanh (Forest xs) = Forest (tanh <$> xs)
+  asinh (Forest xs) = Forest (asinh <$> xs)
+  acosh (Forest xs) = Forest (acosh <$> xs)
+  atanh (Forest xs) = Forest (atanh <$> xs)
+
+
+
+-- | Pull out a layer of monadic context from a `Forest`.
+--
+-- Not sure, but I think that the only inhabitants of this type can:
+--
+--  * return the original
+--  * do this
+--  * swap two `Tree` values
+--  * some combination of the above
+pullM :: Functor m => Forest m a -> m (Forest m a)
+pullM (Forest xs) = snd . getTree <$> xs
+
+-- | `pullM` and `extract`
+pullMa :: Functor m => Forest m a -> m a
+pullMa (Forest xs) = extract <$> xs
+
+-- | Unfold a `Tree` from a seed value
+unfoldTree   :: Functor m => (b -> (a, m b)) -> b -> Tree   m a
+unfoldTree   f x = Tree   (Forest . fmap (unfoldTree   f) <$> f x)
+
+-- | Unfold a `Forest` from a seed value
+unfoldForest :: Functor m => (b -> m (a, b)) -> b -> Forest m a
+unfoldForest f x = Forest (Tree .   fmap (unfoldForest f) <$> f x)
+
+--  | Build a `Tree` using `Applicative` iteration
+iterateTree :: Applicative m => (a -> m a) -> a -> m (Tree m a)
+iterateTree f x = let y = f x in Tree <$> liftA2 (,) y (iterateForest f <$> y)
+
+--  | Build a `Forest` using `Applicative` iteration
+iterateForest :: Applicative m => (a -> m a) -> a -> Forest m a
+iterateForest f x = Forest (iterateTree f x)
+
+
+
 
 
 -- | Algebraic notes:
@@ -341,212 +673,6 @@ freeAndCofree :: ()
 freeAndCofree = ()
 
 
--- | A Generalized tree type
---
--- Question: does any property such that
---
--- @
---   Prop :: * -> Constraint
---     Prop a
---       => Prop (Tree Identity a)?
---     Prop a, Prop a + Prop b => Prop (a, b), Prop a => Prop (m a)
---       => Prop (Tree m a)?
---     Prop a => Prop (m a)
---       => Prop (Tree m a)?
---   Prop :: (* -> *) -> Constraint
---     Prop Identity, Prop a + Prop b => Prop (a :*: b), Prop m
---       => Prop (Tree m)?
---     Prop m
---       => Prop (Forest m)?
---   Prop :: (* -> * -> *) -> Constraint
---     Prop (,), Prop t
---       => Prop (ATree t m)?
---     Prop t
---       => Prop (AForest t m)?
--- @
---
--- E.g.
---
--- @
---  instance Alternative m => Alternative (Forest m)@
--- @
---
--- But no instance for @`Tree` m@
---
--- E.g.
---
--- @
---  instance Functor m => Comonad (Tree m)
--- @
---
--- But no instance for @`Forest` m@
---
-newtype Tree   m a = Tree   { getTree   :: (a, Forest m a) } deriving (Generic)
-
--- | The counterpart to `Tree`
-newtype Forest m a = Forest { getForest :: m (Tree m a) }    deriving (Generic)
-
-
-
-instance Functor m => Functor (Tree m) where
-  fmap :: (a -> b) -> Tree m a -> Tree m b
-  fmap f (Tree (x, xs)) = Tree (f x, fmap f xs)
-
-instance Functor m => Functor (Forest m) where
-  fmap :: (a -> b) -> Forest m a -> Forest m b
-  fmap f (Forest x) = Forest (fmap f <$> x)
-
-
-instance Applicative m => Applicative (Tree m) where
-  pure :: a -> Tree m a
-  pure x = Tree (x, pure x)
-
-  (<*>) :: Tree m (a -> b) -> Tree m a -> Tree m b
-  Tree (f, fs) <*> Tree (x, xs) = Tree (f x, fs <*> xs)
-
-instance Applicative m => Applicative (Forest m) where
-  pure :: a -> Forest m a
-  pure x = Forest (pure (pure x))
-
-  (<*>) :: Forest m (a -> b) -> Forest m a -> Forest m b
-  Forest fs <*> Forest xs = Forest (liftA2 (<*>) fs xs)
-
-
-instance Monad m => Monad (Tree m) where
-  return :: a -> Tree m a
-  return x = Tree (x, pure x)
-
-  (>>=) :: Tree m a -> (a -> Tree m b) -> Tree m b
-  Tree (x, _) >>= f = f x
-
-
-instance Monad m => Monad (Forest m) where
-  return :: a -> Forest m a
-  return x = Forest (return (return x))
-
-  (>>=) :: Forest m a -> (a -> Forest m b) -> Forest m b
-  Forest xs >>= f = Forest (join (getForest . f . extract <$> xs))
-
-
-instance Functor m => Comonad (Tree m) where
-  extract :: Tree m a -> a
-  extract (Tree (x, _)) = x
-
-  duplicate :: Tree m a -> Tree m (Tree m a)
-  duplicate (Tree (x, Forest xs)) = Tree (Tree (x, Forest xs), Forest (duplicate <$> xs))
-
-
-instance Applicative m => ComonadApply (Tree m) where
-  (<@>) :: Tree m (a -> b) -> Tree m a -> Tree m b
-  Tree (f, fs) <@> Tree (x, xs) = Tree (f x, fs <*> xs)
-
-
-instance MonadTrans Forest where
-  lift :: Monad m => m a -> Forest m a
-  lift = Forest . fmap return
-
-
-instance MonadIO m => MonadIO (Forest m) where
-  liftIO :: IO a -> Forest m a
-  liftIO = lift . liftIO
-
-
-instance MonadState s m => MonadState s (Forest m) where
-  get = lift get
-  put = lift . put
-  state = lift . state
-
-
-instance ComonadTrans Tree where
-  lower :: Comonad w => Tree w a -> w a
-  lower = lower . snd . getTree
-
-
-instance ComonadTrans Forest where
-  lower :: Comonad w => Forest w a -> w a
-  lower = fmap extract . getForest
-
-
-instance Eq1 t => Eq1 (Tree t) where
-  liftEq f (Tree (x, xs)) (Tree (y, ys)) = f x y && liftEq f xs ys
-
-instance Eq1 t => Eq1 (Forest t) where
-  liftEq f (Forest xs) (Forest ys) = liftEq (liftEq f) xs ys
-
-
-instance Ord1 t => Ord1 (Tree t) where
-  liftCompare f (Tree (x, xs)) (Tree (y, ys)) = f x y <> liftCompare f xs ys
-
-instance Ord1 t => Ord1 (Forest t) where
-  liftCompare f (Forest xs) (Forest ys) = liftCompare (liftCompare f) xs ys
-
-
--- | `Tree` is not a monad transformer, but @`Tree` . m@ is, for @`Monad` m@
-liftTree :: Monad m => m a -> m (Tree m a)
-liftTree x = Tree <$> fmap (, lift x) x
-
-
--- | Push a monadic context into a `Forest` by binding it and unwrapping the forest.
---
--- It should be equivalent to:
---
--- @
---  Forest . join . fmap getForest
---  Forest .        (>>= getForest)
--- @
---
-instance Monad m => MonadFree m (Forest m) where
-  wrap :: m (Forest m a) -> Forest m a
-  wrap fs = Forest (fs >>= getForest)
-
-
-instance (Monoid a, Applicative m) => Monoid (Tree m a) where
-  mempty = Tree (mempty, pure mempty)
-  mappend (Tree (x, xs)) (Tree (y, ys)) = Tree (mappend x y, liftA2 mappend xs ys)
-
-instance (Monoid a, Applicative m) => Monoid (Forest m a) where
-  mempty = Forest (pure mempty)
-  mappend (Forest xs) (Forest ys) = Forest (liftA2 mappend xs ys)
-
-
-instance (Monoid a, Applicative m) => Semigroup (Tree m a)
-instance (Monoid a, Applicative m) => Semigroup (Forest m a)
-
-
--- | Note that `Tree` can only be `Alternative` with constraints on @a@, so it
--- can't be `Alternative` in Haskell
-instance Alternative m => Alternative (Forest m) where
-  empty = Forest empty
-  Forest xs <|> Forest ys = Forest (xs <|> ys)
-
-
-instance PrimMonad m => PrimMonad (Forest m) where
-  type PrimState (Forest m) = PrimState m
-
-  primitive = lift . primitive
-
-
-instance PrimBase m => PrimBase (Forest m) where
-  internal = internal . pullMa
-
-
-instance Foldable m => Foldable (Tree m) where
-  foldr f y (Tree (x, xs)) = foldr f (f x y) xs
-
-instance Foldable m => Foldable (Forest m) where
-  foldr f y (Forest xs) = foldr (flip (foldr f)) y xs
-
-
-instance Traversable m => Traversable (Tree m) where
-  traverse f (Tree (x, xs)) = Tree <$> liftA2 (,) (f x) (traverse f xs)
-
-  mapM f (Tree (x, xs)) = Tree <$> liftM2 (,) (f x) (mapM f xs)
-
-instance Traversable m => Traversable (Forest m) where
-  traverse f (Forest xs) = Forest <$> traverse (traverse f) xs
-
-  mapM f (Forest xs) = Forest <$> mapM (mapM f) xs
-
 
 -- | Lift an `Enum` to a `Tree` type where the outermost is first?
 --
@@ -587,118 +713,5 @@ instance Traversable m => Traversable (Forest m) where
 ideaInstanceEnum :: ()
 ideaInstanceEnum = ()
 
-
-instance (Applicative m, Num a) => Num (Tree m a) where
-  Tree (x, xs) + Tree (y, ys) = Tree (x + y, xs + ys)
-  Tree (x, xs) * Tree (y, ys) = Tree (x * y, xs * ys)
-  Tree (x, xs) - Tree (y, ys) = Tree (x - y, xs - ys)
-
-  negate (Tree (x, xs)) = Tree (negate x, negate xs)
-  abs    (Tree (x, xs)) = Tree (abs    x, abs    xs)
-  signum (Tree (x, xs)) = Tree (signum x, signum xs)
-
-  fromInteger x = Tree (fromInteger x, fromInteger x)
-
-
-instance (Applicative m, Num a) => Num (Forest m a) where
-  Forest xs + Forest ys = Forest (liftA2 (+) xs ys)
-  Forest xs * Forest ys = Forest (liftA2 (*) xs ys)
-  Forest xs - Forest ys = Forest (liftA2 (-) xs ys)
-
-  negate (Forest xs) = Forest (negate <$> xs)
-  abs    (Forest xs) = Forest (abs    <$> xs)
-  signum (Forest xs) = Forest (signum <$> xs)
-
-  fromInteger x = Forest (pure (fromInteger x))
-
-
-instance (Applicative m, Fractional a) => Fractional (Tree m a) where
-  Tree (x, xs) / Tree (y, ys) = Tree (x / y, xs / ys)
-  recip (Tree (x, xs)) = Tree (recip x, recip xs)
-  fromRational x = Tree (fromRational x, fromRational x)
-
-instance (Applicative m, Fractional a) => Fractional (Forest m a) where
-  Forest xs / Forest ys = Forest (liftA2 (/) xs ys)
-  recip (Forest xs) = Forest (recip <$> xs)
-  fromRational x = Forest (pure (fromRational x))
-
-
-instance (Applicative m, Floating a) => Floating (Tree m a) where
-  pi = Tree (pi, pi)
-
-  Tree (x, xs) ** Tree (y, ys) = Tree (x ** y, xs ** ys)
-  logBase (Tree (x, xs)) (Tree (y, ys)) = Tree (logBase x y, logBase xs ys)
-
-  exp (Tree (x, xs)) = Tree (exp x, exp xs)
-  log (Tree (x, xs)) = Tree (log x, log xs)
-  sqrt (Tree (x, xs)) = Tree (sqrt x, sqrt xs)
-  sin (Tree (x, xs)) = Tree (sin x, sin xs)
-  cos (Tree (x, xs)) = Tree (cos x, cos xs)
-  tan (Tree (x, xs)) = Tree (tan x, tan xs)
-  asin (Tree (x, xs)) = Tree (asin x, asin xs)
-  acos (Tree (x, xs)) = Tree (acos x, acos xs)
-  atan (Tree (x, xs)) = Tree (atan x, atan xs)
-  sinh (Tree (x, xs)) = Tree (sinh x, sinh xs)
-  cosh (Tree (x, xs)) = Tree (cosh x, cosh xs)
-  tanh (Tree (x, xs)) = Tree (tanh x, tanh xs)
-  asinh (Tree (x, xs)) = Tree (asinh x, asinh xs)
-  acosh (Tree (x, xs)) = Tree (acosh x, acosh xs)
-  atanh (Tree (x, xs)) = Tree (atanh x, atanh xs)
-
-
-instance (Applicative m, Floating a) => Floating (Forest m a) where
-  pi = Forest (pure pi)
-
-  Forest xs ** Forest ys = Forest (liftA2 (**) xs ys)
-  logBase (Forest xs) (Forest ys) = Forest (liftA2 logBase xs ys)
-
-  exp (Forest xs) = Forest (exp <$> xs)
-  log (Forest xs) = Forest (log <$> xs)
-  sqrt (Forest xs) = Forest (sqrt <$> xs)
-  sin (Forest xs) = Forest (sin <$> xs)
-  cos (Forest xs) = Forest (cos <$> xs)
-  tan (Forest xs) = Forest (tan <$> xs)
-  asin (Forest xs) = Forest (asin <$> xs)
-  acos (Forest xs) = Forest (acos <$> xs)
-  atan (Forest xs) = Forest (atan <$> xs)
-  sinh (Forest xs) = Forest (sinh <$> xs)
-  cosh (Forest xs) = Forest (cosh <$> xs)
-  tanh (Forest xs) = Forest (tanh <$> xs)
-  asinh (Forest xs) = Forest (asinh <$> xs)
-  acosh (Forest xs) = Forest (acosh <$> xs)
-  atanh (Forest xs) = Forest (atanh <$> xs)
-
-
-
--- | Pull out a layer of monadic context from a `Forest`.
---
--- Not sure, but I think that the only inhabitants of this type can:
---
---  * return the original
---  * do this
---  * swap two `Tree` values
---  * some combination of the above
-pullM :: Functor m => Forest m a -> m (Forest m a)
-pullM (Forest xs) = snd . getTree <$> xs
-
--- | `pullM` and `extract`
-pullMa :: Functor m => Forest m a -> m a
-pullMa (Forest xs) = extract <$> xs
-
--- | Unfold a `Tree` from a seed value
-unfoldTree   :: Functor m => (b -> (a, m b)) -> b -> Tree   m a
-unfoldTree   f x = Tree   (Forest . fmap (unfoldTree   f) <$> f x)
-
--- | Unfold a `Forest` from a seed value
-unfoldForest :: Functor m => (b -> m (a, b)) -> b -> Forest m a
-unfoldForest f x = Forest (Tree .   fmap (unfoldForest f) <$> f x)
-
---  | Build a `Tree` using `Applicative` iteration
-iterateTree :: Applicative m => (a -> m a) -> a -> m (Tree m a)
-iterateTree f x = let y = f x in Tree <$> liftA2 (,) y (iterateForest f <$> y)
-
---  | Build a `Forest` using `Applicative` iteration
-iterateForest :: Applicative m => (a -> m a) -> a -> Forest m a
-iterateForest f x = Forest (iterateTree f x)
 
 

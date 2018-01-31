@@ -1,22 +1,36 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module Data.Functor.Object where
 
 import Control.Applicative (liftA2)
 import Control.Comonad (Comonad(..))
-import Data.Flip (Flip(..))
 import Data.List.NonEmpty (NonEmpty(..))
 import Data.Tuple (swap)
-import GHC.Generics (Generic)
+import GHC.Generics (Generic, Generic1)
+
+import Data.Fix (Fix(..), fixList)
 
 
--- | Both a right result and a continuation (`Action`)
-data Object f b c = Object { getObject :: (  c,  Action f b c)  }
+-- | Both a right result and a continuation (`Action`).
+--
+-- Note: I was unable to derive an instance of `Generic1`:
+-- @
+--  Can't make a derived instance of ‘Generic1 (Object f b)’:
+--  Constructor ‘Object’ applies a type to an argument involving the last parameter
+--    but the applied type is not of kind * -> *
+-- @
+--
+data Object f b c = Object { getObject :: (  c,  Action f b c)  } deriving (Generic)
+
 
 -- | An action which could contain a left result, continuation (`Object`)
-data Action f b c = Action { runAction :: (f b  (Object f b c)) }
+data Action f b c = Action { runAction ::  f b  (Object f b c)  } deriving (Generic)
+
+deriving instance Functor (f b) => Generic1 (Action f b)
+
 
 
 instance Functor (f b) => Functor (Object f b) where
@@ -39,39 +53,13 @@ instance Comonad (f b) => Comonad (Action f b) where
   duplicate x@(Action xs) = Action $ fmap (const x) <$> xs
 
 
-
-
--- | Simple fixed point newtype
-newtype Fix f = Fix { runFix :: f (Fix f) } deriving (Generic)
-
 -- | Cycle a pair, resulting in a fixed point
 cyclePair :: Object (,) a b -> Fix ((,) (a, b))
 cyclePair (Object (x, Action (y, zs))) = Fix ((y, x), cyclePair zs)
 
--- | Convert a `Fix` to an infinite list
-fixList :: Fix ((,) a) -> [a]
-fixList (Fix ~(x, xs)) = x : fixList xs
-
-
-instance Show a => Show (Fix ((,) a)) where
-  show = ("Fix " ++) . show . fixList
-
-
-
-
-
--- | `Object`, but with a sum (`Either`) instead of a tuple
-data Result f b c = Result { getResult :: Either c (Effect f b c) }
-
--- | `Action`, but with a sum (`Either`) instead of a tuple
-data Effect f b c = Effect { runEffect :: f      b (Result f b c) }
-
-
-instance Functor (f b) => Functor (Result f b) where
-  fmap f (Result x) = Result (either (Left . f) (Right . fmap f) x)
-
-instance Functor (f b) => Functor (Effect f b) where
-  fmap f (Effect x) = Effect (fmap f <$> x)
+-- | @`fixList` . `cyclePair`@
+cyclePairList :: Object (,) a b -> [(a, b)]
+cyclePairList = fixList . cyclePair
 
 
 -- | Given all the functional pairs to define a function, we can cyclically wrap the pairs into an `Action` over pairs.
@@ -102,13 +90,6 @@ appIsh (Action (x, Object (y, ys))) (Object (x', Action zs))
   | otherwise = appIsh ys (Object (x', Action zs))
 
 
--- | Convert a flipped result to an either (sum)
-toEither :: Flip (Result (Flip (Object f))) c b -> Either c b
-toEither = fmap (fst . getObject . getFlip . runEffect) . getResult . getFlip
-
--- | Convert a flipped result to a tuple (product)
-toPair :: Flip (Object (Flip (Object f))) c b -> (c, b)
-toPair = fmap (fst . getObject . getFlip . runAction) . getObject . getFlip
 
 -- | Undo an `Action`
 unAction :: Functor (f b) => Action f b c -> f b c
