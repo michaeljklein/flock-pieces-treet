@@ -54,6 +54,10 @@ Tree :: (a, Forest m a) -> Tree m a
 newtype Forest m a
 Forest :: m (Tree m a) -> Forest m a
 [getForest] :: Forest m a -> m (Tree m a)
+treeToCofree :: Functor m => Tree m a -> Cofree m a
+cofreeToTree :: Functor m => Cofree m a -> Tree m a
+forestToCofree :: Functor m => Forest m a -> m (Cofree m a)
+cofreeToForest :: Functor m => m (Cofree m a) -> Forest m a
 
 -- | <a>Tree</a> is not a monad transformer, but <tt><a>Tree</a> . m</tt>
 --   is, for <tt><a>Monad</a> m</tt>
@@ -560,35 +564,11 @@ transIdForest2 :: Arrow t => t a (a, Forest (t a) a) -> t a (Tree (t a) a)
 -- | Coerced all the way up to <a>idForest</a>
 idForest2 :: Arrow t => t a (a, Forest (t a) a)
 
--- | <a>undefined</a>
-forestInv :: (Arrow t, Groupoid t) => AForest t a b -> AForest t b a
-
--- | <a>undefined</a>
-forestInv1 :: (Arrow t, Groupoid t) => Forest (t a) b -> Forest (t b) a
-
--- | <a>undefined</a>
-forestInv2 :: (Arrow t, Groupoid t) => t a (Tree (t a) b) -> t b (Tree (t b) a)
-
--- | <a>undefined</a>
-swaps :: Arrow t => t a (Tree (t a) b) -> t (Tree (t b) a) b
-
--- | <a>undefined</a>
-swaps1 :: Arrow t => t a (b, Forest (t a) b) -> t (a, Forest (t b) a) b
-
--- | <a>undefined</a>. Ok, I'm convinced that this needs Groupoid
-swaps2 :: Arrow t => t a (b, t a (Tree (t a) b)) -> t (a, t b (Tree (t b) a)) b
-
--- | <pre>
---   <a>inv</a> = <a>forestInv</a>
---   </pre>
-
 -- | <tt>`(.)` = <a>laog'</a></tt>, <tt><a>id</a> = <a>idForest'</a></tt>
 
 -- | <pre>
 --   <a>o</a> = <a>goal'</a>
 --   </pre>
-
--- | This also looks a lot like distribution.. (<a>undefined</a>)
 
 -- | Notes on Data.Bifoldable, Data.Bitraversable, etc:
 --   
@@ -623,25 +603,6 @@ swaps2 :: Arrow t => t a (b, t a (Tree (t a) b)) -> t (a, t b (Tree (t b) a)) b
 bifoldableNotes :: ()
 
 -- | This looks a lot like distribution
-
--- | This is harder than I thought, might be impossible, probably
---   impossible.
---   
---   Try extending <tt>Choice (ATree t)</tt> to not use <tt>Choice (AForest
---   t)</tt>.
---   
---   (Currently, both are <a>undefined</a>.)
-
--- | REQUIRES DISTRIBUTION: distribute :: Functor f =&gt; f (g a) -&gt; g
---   (f a), Functor f =&gt; f (Tree m a) -&gt; Tree m (f a)
-
--- | <a>undefined</a>
-wantTo :: AForest t a (ATree t a b) -> AForest t (ATree t a b) b
-
--- | <a>undefined</a>
-wantFrom :: AForest t (ATree t a b) b -> AForest t a (ATree t a b)
-
--- | Impossible instance, no way to convert <tt>a</tt> to <tt>b</tt>.
 
 -- | Re-associate a tuple
 sndIn :: ((a, b), c) -> ((a, c), b)
@@ -717,23 +678,68 @@ instance GHC.Generics.Generic (Control.Arrow.Tree.AForest t a b)
 instance GHC.Generics.Generic1 (Control.Arrow.Tree.ATree t a)
 instance GHC.Generics.Generic (Control.Arrow.Tree.ATree t a b)
 instance Control.Arrow.Arrow t => Data.Semigroupoid.Semigroupoid (Control.Arrow.Tree.AForest t)
-instance (Control.Arrow.Arrow t, Data.Groupoid.Groupoid t) => Data.Groupoid.Groupoid (Control.Arrow.Tree.AForest t)
 instance Control.Arrow.Arrow t => Control.Category.Category (Control.Arrow.Tree.AForest t)
 instance GHC.Base.Functor (t a) => GHC.Base.Functor (Control.Arrow.Tree.AForest t a)
 instance Data.Bifunctor.Bifunctor t => Data.Bifunctor.Bifunctor (Control.Arrow.Tree.ATree t)
 instance Data.Bifunctor.Bifunctor t => Data.Bifunctor.Bifunctor (Control.Arrow.Tree.AForest t)
-instance Data.Biapplicative.Biapplicative t => Data.Biapplicative.Biapplicative (Control.Arrow.Tree.ATree t)
-instance Data.Biapplicative.Biapplicative t => Data.Biapplicative.Biapplicative (Control.Arrow.Tree.AForest t)
 instance Data.Profunctor.Unsafe.Profunctor t => Data.Profunctor.Unsafe.Profunctor (Control.Arrow.Tree.ATree t)
 instance Data.Profunctor.Unsafe.Profunctor t => Data.Profunctor.Unsafe.Profunctor (Control.Arrow.Tree.AForest t)
 instance Data.Profunctor.Strong.Strong t => Data.Profunctor.Strong.Strong (Control.Arrow.Tree.AForest t)
-instance Data.Profunctor.Choice.Choice t => Data.Profunctor.Choice.Choice (Control.Arrow.Tree.ATree t)
+instance Control.Arrow.Arrow t => Data.Semigroupoid.Semigroupoid (Control.Arrow.Tree.ATree t)
+instance GHC.Base.Functor (t a) => GHC.Base.Functor (Control.Arrow.Tree.ATree t a)
+
+module Control.Arrow.Tree.Experimental
+
+-- | <pre>
+--   <a>inv</a> = <a>forestInv</a>
+--   </pre>
+
+-- | <a>undefined</a>
+forestInv :: (Arrow t, Groupoid t) => AForest t a b -> AForest t b a
+
+-- | <a>undefined</a>
+forestInv1 :: (Arrow t, Groupoid t) => Forest (t a) b -> Forest (t b) a
+
+-- | <a>undefined</a>
+forestInv2 :: (Arrow t, Groupoid t) => t a (Tree (t a) b) -> t b (Tree (t b) a)
+
+-- | <a>undefined</a>
+swaps :: Arrow t => t a (Tree (t a) b) -> t (Tree (t b) a) b
+
+-- | <a>undefined</a>
+swaps1 :: Arrow t => t a (b, Forest (t a) b) -> t (a, Forest (t b) a) b
+
+-- | <a>undefined</a>. Ok, I'm convinced that this needs Groupoid
+swaps2 :: Arrow t => t a (b, t a (Tree (t a) b)) -> t (a, t b (Tree (t b) a)) b
+
+-- | This also looks a lot like distribution.. (<a>undefined</a>)
+
+-- | This is harder than I thought, might be impossible, probably
+--   impossible.
+--   
+--   Try extending <tt>Choice (ATree t)</tt> to not use <tt>Choice (AForest
+--   t)</tt>.
+--   
+--   (Currently, both are <a>undefined</a>.)
+
+-- | REQUIRES DISTRIBUTION: distribute :: Functor f =&gt; f (g a) -&gt; g
+--   (f a), Functor f =&gt; f (Tree m a) -&gt; Tree m (f a)
+
+-- | <a>undefined</a>
+wantTo :: AForest t a (ATree t a b) -> AForest t (ATree t a b) b
+
+-- | <a>undefined</a>
+wantFrom :: AForest t (ATree t a b) b -> AForest t a (ATree t a b)
+
+-- | Impossible instance, no way to convert <tt>a</tt> to <tt>b</tt>.
+instance (Control.Arrow.Arrow t, Data.Groupoid.Groupoid t) => Data.Groupoid.Groupoid (Control.Arrow.Tree.AForest t)
+instance Data.Biapplicative.Biapplicative t => Data.Biapplicative.Biapplicative (Control.Arrow.Tree.ATree t)
+instance Data.Biapplicative.Biapplicative t => Data.Biapplicative.Biapplicative (Control.Arrow.Tree.AForest t)
 instance Data.Profunctor.Choice.Choice t => Data.Profunctor.Choice.Choice (Control.Arrow.Tree.AForest t)
 instance Data.Profunctor.Closed.Closed t => Data.Profunctor.Closed.Closed (Control.Arrow.Tree.ATree t)
 instance Data.Profunctor.Closed.Closed t => Data.Profunctor.Closed.Closed (Control.Arrow.Tree.AForest t)
-instance Control.Arrow.Arrow t => Data.Semigroupoid.Semigroupoid (Control.Arrow.Tree.ATree t)
-instance GHC.Base.Functor (t a) => GHC.Base.Functor (Control.Arrow.Tree.ATree t a)
 instance (Control.Arrow.Arrow t, Data.Groupoid.Groupoid t, (TypeError ...)) => Data.Groupoid.Groupoid (Control.Arrow.Tree.ATree t)
+instance Data.Profunctor.Choice.Choice t => Data.Profunctor.Choice.Choice (Control.Arrow.Tree.ATree t)
 
 module Data.Fix
 
