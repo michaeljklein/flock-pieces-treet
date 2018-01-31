@@ -16,7 +16,7 @@ import GHC.Generics (Generic)
 data Object f b c = Object { getObject :: (  c,  Action f b c)  }
 
 -- | An action which could contain a left result, continuation (`Object`)
-data Action f b c = Action { runAction :: (f b  (Object f b c)) }
+data Action f b c = Action { runAction ::  f b  (Object f b c)  }
 
 
 instance Functor (f b) => Functor (Object f b) where

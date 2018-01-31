@@ -35,7 +35,7 @@ instance Arrow t => Semigroupoid (AForest t) where
 
 -- | Compose two `Tree`s
 comp :: Tree ((->) b) c -> Tree ((->) a) b -> Tree ((->) a) c
-comp (Tree (x1, Forest fx1)) (Tree (y1, Forest fy1)) = Tree (x1, Forest (\z1 -> comp (fx1 y1) (fy1 z1)))
+comp (Tree (x1, Forest fx1)) (Tree (y1, Forest fy1)) = Tree (x1, Forest (comp (fx1 y1) . fy1))
 
 -- | `coerce`
 getTree2 :: (Tree ma a -> Tree mb b -> Tree mc c) -> (a, Forest ma a) -> (b, Forest mb b) -> (c, Forest mc c)
@@ -236,7 +236,7 @@ instance Biapplicative t => Biapplicative (ATree t) where
 instance Biapplicative t => Biapplicative (AForest t) where
   bipure x y = AForest (Forest (bipure x (getATree (bipure x y))))
 
-  AForest (Forest fs) <<*>> AForest (Forest xs) = AForest (Forest ((undefined fs) <<*>> xs))
+  AForest (Forest fs) <<*>> AForest (Forest xs) = AForest (Forest (undefined fs <<*>> xs))
         -- _ :: t (a -> b) (Tree (t (a -> b)) (c -> d)) -> t (a -> b) (Tree (t a) c -> Tree (t b) d)
 
 -- | Notes on Data.Bifoldable, Data.Bitraversable, etc:
@@ -289,7 +289,7 @@ instance Strong t => Strong (AForest t) where
   first' (AForest (Forest fs)) = AForest (Forest (rmap (Tree . fmap (getAForest . first' . AForest) . sndIn . first getTree) (first' fs)))
 
   second' :: AForest t a b -> AForest t (c, a) (c, b)
-  second' (AForest (Forest fs)) = AForest (Forest $ rmap (Tree . fmap (getAForest . second' . AForest) . unassoc . second getTree) $ (second' fs))
+  second' (AForest (Forest fs)) = AForest (Forest (rmap (Tree . fmap (getAForest . second' . AForest) . unassoc . second getTree) (second' fs)))
 
 
 instance Choice t => Choice (ATree t) where
