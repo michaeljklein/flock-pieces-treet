@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Control.Monad.Trans.TreeT
                      , Control.Arrow.Tree
+                     , Control.Arrow.Tree.Experimental
                      , Data.Fix
                      , Data.Flip
                      , Data.Functor.Object
