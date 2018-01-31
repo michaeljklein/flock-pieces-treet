@@ -1,7 +1,7 @@
 digraph G {
 size="6,4";
 ratio="fill";
-u4[label="Main",style="filled",fillcolor="#bbffbb",penwidth="0"];
+u6[label="Main",style="filled",fillcolor="#bbffbb",penwidth="0"];
 subgraph cluster_0 {
 label="Control";
 color="#0000000F";
@@ -32,17 +32,19 @@ subgraph cluster_4 {
 label="Data";
 color="#0000000F";
 style="filled";
-u2[label="Flip",style="filled",fillcolor="#ffbbff",penwidth="0"];
+u2[label="Fix",style="filled",fillcolor="#ffbbff",penwidth="0"];
+u3[label="Flip",style="filled",fillcolor="#ffbbff",penwidth="0"];
 subgraph cluster_5 {
 label="Functor";
 color="#0000000F";
 style="filled";
-u3[label="Object",style="filled",fillcolor="#77ff77",penwidth="0"];
+u4[label="Object",style="filled",fillcolor="#77ff77",penwidth="0"];
+u5[label="Result",style="filled",fillcolor="#77ff77",penwidth="0"];
 
 }
 
 }
 u1 -> u0;
-u3 -> u2;
+u4 -> u2;
 
 }
