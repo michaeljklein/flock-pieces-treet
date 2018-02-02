@@ -27,17 +27,12 @@ library
                      , bifunctors
                      , checkers
                      , comonad
-                     , comonad-transformers
-                     , containers
                      , contravariant
                      , free
                      , mtl
                      , primitive
-                     , profunctor-extras
                      , profunctors
-                     , random
                      , semigroupoids
-                     , template-haskell
                      , transformers
   default-language:    Haskell2010
 
