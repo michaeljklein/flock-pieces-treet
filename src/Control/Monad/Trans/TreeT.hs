@@ -73,16 +73,29 @@ newtype Forest m a = Forest { getForest :: m (Tree m a) }    deriving (Generic)
 
 
 
+-- | One half of an isomorphism:
+--
+-- @
+--  Functor m => Tree m a <-> Cofree m a
+-- @
+--
 treeToCofree :: Functor m => Tree m a -> Cofree m a
 treeToCofree (Tree ~(x, xs)) = x :< forestToCofree xs
 
+-- | One half of an isomorphism. See `treeToCofree`
 cofreeToTree :: Functor m => Cofree m a -> Tree m a
 cofreeToTree ~(x :< xs) = Tree (x, cofreeToForest xs)
 
-
+-- | One half of an isomorphism:
+--
+-- @
+--  Functor m => Forest m a <-> m (Cofree m a)
+-- @
+--
 forestToCofree :: Functor m => Forest m a -> m (Cofree m a)
 forestToCofree = fmap treeToCofree . getForest
 
+-- | One half of an isomorphism. See `forestToCofree`
 cofreeToForest :: Functor m => m (Cofree m a) -> Forest m a
 cofreeToForest = Forest . fmap cofreeToTree
 
@@ -562,7 +575,7 @@ propertyPreservation = ()
 -- f' . f = id,
 -- Iso (a' ~ a) (f . f' = id)
 -- @
-
+--
 -- @
 -- f :: g a -> g' a',
 -- f' :: g' a' -> g a,
@@ -571,6 +584,7 @@ propertyPreservation = ()
 --
 twoMoreAttempts :: ()
 twoMoreAttempts = ()
+
 
 -- | Summarize and notes:
 --
@@ -602,6 +616,7 @@ twoMoreAttempts = ()
 --
 naturalTransformationAlgebra :: ()
 naturalTransformationAlgebra = ()
+
 
 -- | Free/Cofree and algebra
 --
@@ -673,7 +688,6 @@ freeAndCofree :: ()
 freeAndCofree = ()
 
 
-
 -- | Lift an `Enum` to a `Tree` type where the outermost is first?
 --
 -- Hmm.. I know that we can't use the internal monadic structure of `Tree` since we know nothing about it.
@@ -712,6 +726,5 @@ freeAndCofree = ()
 --
 ideaInstanceEnum :: ()
 ideaInstanceEnum = ()
-
 
 
