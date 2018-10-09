@@ -51,4 +51,7 @@ render_graph.sh
 13 directories, 39 files
 ```
 
+# Docs
+
+Haddock-generated documentation is available [here](https://michaeljklein.github.io/flock-pieces-treet/doc/index.html)
 
