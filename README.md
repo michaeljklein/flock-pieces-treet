@@ -31,31 +31,6 @@ render_graph.sh
 ├── dependency_graph.dot
 ├── dependency_graph.jpg
 ├── doc
-│   └── html
-│       └── flock-pieces-treet
-│           ├── Control-Arrow-Tree.html
-│           ├── Control-Monad-Trans-TreeT.html
-│           ├── Data-Bidistributable.html
-│           ├── Data-Rope.html
-│           ├── Data-SwapList.html
-│           ├── doc-index.html
-│           ├── flock-pieces-treet.haddock
-│           ├── flock-pieces-treet.txt
-│           ├── haddock-util.js
-│           ├── hslogo-16.png
-│           ├── index.html
-│           ├── minus.gif
-│           ├── ocean.css
-│           ├── plus.gif
-│           ├── src
-│           │   ├── Control.Arrow.Tree.html
-│           │   ├── Control.Monad.Trans.TreeT.html
-│           │   ├── Data.Bidistributable.html
-│           │   ├── Data.Rope.html
-│           │   ├── Data.SwapList.html
-│           │   ├── highlight.js
-│           │   └── style.css
-│           └── synopsis.png
 ├── flock-pieces-treet.cabal
 ├── render_graph.sh
 ├── src

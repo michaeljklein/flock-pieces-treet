@@ -152,3 +152,160 @@ Haddock index for snapshot packages already up to date at:
 I, [2018-02-02T14:57:39.621934 #92924]  INFO -- : nil
 I, [2018-02-02T14:57:39.621991 #92924]  INFO -- : built_docs_dir: /Users/michaelklein/Desktop/flock/pieces/treet/.stack-work/install/x86_64-osx/lts-10.2/8.2.2/doc
 I, [2018-02-02T15:10:20.521408 #92924]  INFO -- : Docs copied to doc/
+I, [2018-10-08T23:40:04.489291 #16682]  INFO -- : Stack log:
+I, [2018-10-08T23:40:04.489535 #16682]  INFO -- : checkers-0.4.9.5: download
+checkers-0.4.9.5: configure
+checkers-0.4.9.5: build
+checkers-0.4.9.5: haddock
+checkers-0.4.9.5: copy/register
+Building all executables for `flock-pieces-treet' once. After a successful build of all of them, only specified executables will be rebuilt.
+flock-pieces-treet-0.1.0.0: configure (lib + exe)
+Configuring flock-pieces-treet-0.1.0.0...
+clang: warning: argument unused during compilation: '-nopie' [-Wunused-command-line-argument]
+flock-pieces-treet-0.1.0.0: build (lib + exe)
+Preprocessing library for flock-pieces-treet-0.1.0.0..
+Building library for flock-pieces-treet-0.1.0.0..
+[1 of 7] Compiling Control.Monad.Trans.TreeT ( src/Control/Monad/Trans/TreeT.hs, .stack-work/dist/x86_64-osx/Cabal-2.0.1.0/build/Control/Monad/Trans/TreeT.o )
+[2 of 7] Compiling Control.Arrow.Tree ( src/Control/Arrow/Tree.hs, .stack-work/dist/x86_64-osx/Cabal-2.0.1.0/build/Control/Arrow/Tree.o )
+[3 of 7] Compiling Control.Arrow.Tree.Experimental ( src/Control/Arrow/Tree/Experimental.hs, .stack-work/dist/x86_64-osx/Cabal-2.0.1.0/build/Control/Arrow/Tree/Experimental.o )
+[4 of 7] Compiling Data.Fix         ( src/Data/Fix.hs, .stack-work/dist/x86_64-osx/Cabal-2.0.1.0/build/Data/Fix.o )
+[5 of 7] Compiling Data.Flip        ( src/Data/Flip.hs, .stack-work/dist/x86_64-osx/Cabal-2.0.1.0/build/Data/Flip.o )
+[6 of 7] Compiling Data.Functor.Object ( src/Data/Functor/Object.hs, .stack-work/dist/x86_64-osx/Cabal-2.0.1.0/build/Data/Functor/Object.o )
+[7 of 7] Compiling Data.Functor.Result ( src/Data/Functor/Result.hs, .stack-work/dist/x86_64-osx/Cabal-2.0.1.0/build/Data/Functor/Result.o )
+Preprocessing executable 'flock-pieces-treet-demo' for flock-pieces-treet-0.1.0.0..
+Building executable 'flock-pieces-treet-demo' for flock-pieces-treet-0.1.0.0..
+[1 of 1] Compiling Main             ( app/Main.hs, .stack-work/dist/x86_64-osx/Cabal-2.0.1.0/build/flock-pieces-treet-demo/flock-pieces-treet-demo-tmp/Main.o )
+Linking .stack-work/dist/x86_64-osx/Cabal-2.0.1.0/build/flock-pieces-treet-demo/flock-pieces-treet-demo ...
+clang: warning: argument unused during compilation: '-nopie' [-Wunused-command-line-argument]
+clang: warning: argument unused during compilation: '-nopie' [-Wunused-command-line-argument]
+flock-pieces-treet-0.1.0.0: haddock
+Preprocessing library for flock-pieces-treet-0.1.0.0..
+Running Haddock on library for flock-pieces-treet-0.1.0.0..
+Haddock coverage:
+  36% ( 21 / 58) in 'Control.Monad.Trans.TreeT'
+  Missing documentation for:
+    Module header
+     (src/Control/Monad/Trans/TreeT.hs:104)
+     (src/Control/Monad/Trans/TreeT.hs:108)
+     (src/Control/Monad/Trans/TreeT.hs:113)
+     (src/Control/Monad/Trans/TreeT.hs:120)
+     (src/Control/Monad/Trans/TreeT.hs:128)
+     (src/Control/Monad/Trans/TreeT.hs:136)
+     (src/Control/Monad/Trans/TreeT.hs:144)
+     (src/Control/Monad/Trans/TreeT.hs:152)
+     (src/Control/Monad/Trans/TreeT.hs:157)
+     (src/Control/Monad/Trans/TreeT.hs:162)
+     (src/Control/Monad/Trans/TreeT.hs:167)
+     (src/Control/Monad/Trans/TreeT.hs:173)
+     (src/Control/Monad/Trans/TreeT.hs:178)
+     (src/Control/Monad/Trans/TreeT.hs:183)
+     (src/Control/Monad/Trans/TreeT.hs:186)
+     (src/Control/Monad/Trans/TreeT.hs:190)
+     (src/Control/Monad/Trans/TreeT.hs:193)
+     (src/Control/Monad/Trans/TreeT.hs:216)
+     (src/Control/Monad/Trans/TreeT.hs:220)
+     (src/Control/Monad/Trans/TreeT.hs:225)
+     (src/Control/Monad/Trans/TreeT.hs:226)
+     (src/Control/Monad/Trans/TreeT.hs:236)
+     (src/Control/Monad/Trans/TreeT.hs:242)
+     (src/Control/Monad/Trans/TreeT.hs:246)
+     (src/Control/Monad/Trans/TreeT.hs:249)
+     (src/Control/Monad/Trans/TreeT.hs:253)
+     (src/Control/Monad/Trans/TreeT.hs:258)
+     (src/Control/Monad/Trans/TreeT.hs:265)
+     (src/Control/Monad/Trans/TreeT.hs:277)
+     (src/Control/Monad/Trans/TreeT.hs:289)
+     (src/Control/Monad/Trans/TreeT.hs:294)
+     (src/Control/Monad/Trans/TreeT.hs:300)
+     (src/Control/Monad/Trans/TreeT.hs:323)
+    iterateTree (src/Control/Monad/Trans/TreeT.hs:371)
+    iterateForest (src/Control/Monad/Trans/TreeT.hs:375)
+    considerLanguageCycle (src/Control/Monad/Trans/TreeT.hs:524)
+  82% ( 33 / 40) in 'Control.Arrow.Tree'
+  Missing documentation for:
+    Module header
+     (src/Control/Arrow/Tree.hs:179)
+     (src/Control/Arrow/Tree.hs:183)
+     (src/Control/Arrow/Tree.hs:188)
+     (src/Control/Arrow/Tree.hs:192)
+     (src/Control/Arrow/Tree.hs:232)
+     (src/Control/Arrow/Tree.hs:236)
+  76% ( 13 / 17) in 'Control.Arrow.Tree.Experimental'
+  Missing documentation for:
+    Module header
+     (src/Control/Arrow/Tree/Experimental.hs:53)
+     (src/Control/Arrow/Tree/Experimental.hs:85)
+     (src/Control/Arrow/Tree/Experimental.hs:117)
+  75% (  3 /  4) in 'Data.Fix'
+  Missing documentation for:
+    Module header
+  48% ( 31 / 64) in 'Data.Flip'
+  Missing documentation for:
+    Module header
+    functorMorphF11 (src/Data/Flip.hs:88)
+    functorMorphF21 (src/Data/Flip.hs:95)
+    functorMorphF22 (src/Data/Flip.hs:102)
+    functorMorphF23 (src/Data/Flip.hs:109)
+    functorMorphF24 (src/Data/Flip.hs:116)
+    functorMorphF33 (src/Data/Flip.hs:124)
+    functorMorphF41 (src/Data/Flip.hs:131)
+    functorMorphF44 (src/Data/Flip.hs:138)
+     (src/Data/Flip.hs:143)
+    testF1Functor (src/Data/Flip.hs:146)
+     (src/Data/Flip.hs:150)
+    testF2Functor (src/Data/Flip.hs:153)
+     (src/Data/Flip.hs:157)
+    testF3Functor (src/Data/Flip.hs:160)
+     (src/Data/Flip.hs:164)
+    testF4Functor (src/Data/Flip.hs:167)
+     (src/Data/Flip.hs:172)
+     (src/Data/Flip.hs:175)
+     (src/Data/Flip.hs:178)
+     (src/Data/Flip.hs:181)
+     (src/Data/Flip.hs:185)
+     (src/Data/Flip.hs:188)
+     (src/Data/Flip.hs:191)
+     (src/Data/Flip.hs:194)
+     (src/Data/Flip.hs:279)
+     (src/Data/Flip.hs:287)
+     (src/Data/Flip.hs:295)
+     (src/Data/Flip.hs:303)
+     (src/Data/Flip.hs:312)
+     (src/Data/Flip.hs:315)
+     (src/Data/Flip.hs:318)
+     (src/Data/Flip.hs:321)
+  78% ( 21 / 27) in 'Data.Functor.Object'
+  Missing documentation for:
+    Module header
+     (src/Data/Functor/Object.hs:32)
+     (src/Data/Functor/Object.hs:36)
+     (src/Data/Functor/Object.hs:39)
+     (src/Data/Functor/Object.hs:44)
+     (src/Data/Functor/Object.hs:50)
+  40% (  4 / 10) in 'Data.Functor.Result'
+  Missing documentation for:
+    Module header
+     (src/Data/Functor/Result.hs:15)
+     (src/Data/Functor/Result.hs:18)
+     (src/Data/Functor/Result.hs:22)
+     (src/Data/Functor/Result.hs:32)
+     (src/Data/Functor/Result.hs:49)
+Documentation created:
+.stack-work/dist/x86_64-osx/Cabal-2.0.1.0/doc/html/flock-pieces-treet/index.html,
+.stack-work/dist/x86_64-osx/Cabal-2.0.1.0/doc/html/flock-pieces-treet/flock-pieces-treet.txt
+Preprocessing executable 'flock-pieces-treet-demo' for flock-pieces-treet-0.1.0.0..
+flock-pieces-treet-0.1.0.0: copy/register
+Installing library in /Users/michaelklein/Desktop/old_desktop/flock/pieces/treet/.stack-work/install/x86_64-osx/lts-10.2/8.2.2/lib/x86_64-osx-ghc-8.2.2/flock-pieces-treet-0.1.0.0-5ZqWAwNXeigDRkDE5zlzk8
+Installing executable flock-pieces-treet-demo in /Users/michaelklein/Desktop/old_desktop/flock/pieces/treet/.stack-work/install/x86_64-osx/lts-10.2/8.2.2/bin
+Registering library for flock-pieces-treet-0.1.0.0..
+Completed 2 action(s).
+Updating Haddock index for local packages in
+/Users/michaelklein/Desktop/old_desktop/flock/pieces/treet/.stack-work/install/x86_64-osx/lts-10.2/8.2.2/doc/index.html
+Updating Haddock index for local packages and dependencies in
+/Users/michaelklein/Desktop/old_desktop/flock/pieces/treet/.stack-work/install/x86_64-osx/lts-10.2/8.2.2/doc/all/index.html
+Updating Haddock index for snapshot packages in
+/Users/michaelklein/.stack/snapshots/x86_64-osx/lts-10.2/8.2.2/doc/index.html
+
+I, [2018-10-08T23:40:04.489566 #16682]  INFO -- : nil
+I, [2018-10-08T23:40:04.489588 #16682]  INFO -- : built_docs_dir: /Users/michaelklein/Desktop/old_desktop/flock/pieces/treet/.stack-work/install/x86_64-osx/lts-10.2/8.2.2/doc
+I, [2018-10-08T23:40:05.210421 #16682]  INFO -- : Docs copied to doc/

@@ -54,9 +54,25 @@ Tree :: (a, Forest m a) -> Tree m a
 newtype Forest m a
 Forest :: m (Tree m a) -> Forest m a
 [getForest] :: Forest m a -> m (Tree m a)
+
+-- | One half of an isomorphism:
+--   
+--   <pre>
+--   Functor m =&gt; Tree m a <a>-</a> Cofree m a
+--   </pre>
 treeToCofree :: Functor m => Tree m a -> Cofree m a
+
+-- | One half of an isomorphism. See <a>treeToCofree</a>
 cofreeToTree :: Functor m => Cofree m a -> Tree m a
+
+-- | One half of an isomorphism:
+--   
+--   <pre>
+--   Functor m =&gt; Forest m a <a>-</a> m (Cofree m a)
+--   </pre>
 forestToCofree :: Functor m => Forest m a -> m (Cofree m a)
+
+-- | One half of an isomorphism. See <a>forestToCofree</a>
 cofreeToForest :: Functor m => m (Cofree m a) -> Forest m a
 
 -- | <a>Tree</a> is not a monad transformer, but <tt><a>Tree</a> . m</tt>
@@ -265,6 +281,12 @@ propertyPreservation :: ()
 --   f' :: a' -&gt; a,
 --   f' . f = id,
 --   Iso (a' ~ a) (f . f' = id)
+--   </pre>
+--   
+--   <pre>
+--   f :: g a -&gt; g' a',
+--   f' :: g' a' -&gt; g a,
+--   f' . f = id
 --   </pre>
 twoMoreAttempts :: ()
 
